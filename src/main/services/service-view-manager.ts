@@ -1,4 +1,4 @@
-import type { BrowserWindow, Rectangle } from 'electron';
+import type { BrowserWindow, Rectangle, WebContents } from 'electron';
 import type { AppConfig } from '@shared/types/config';
 import type { ServiceRuntimeState } from '@shared/types/service';
 import type { CommandId } from '@shared/constants/commands';
@@ -59,11 +59,6 @@ export class ServiceViewManager {
           sessionDir: sessionDirFor(this.deps.paths, instance.type, instance.id),
           isDev: this.deps.isDev,
           shortcuts: this.deps.shortcuts,
-          notificationsAllowed: () => {
-            const current = this.deps.config.get();
-            const inst = this.deps.config.getInstance(instance.id);
-            return current.settings.notifications.enabled && (inst?.notifications.enabled ?? false);
-          },
           onState: (state) => this.onState(state),
           onCommand: this.deps.onCommand,
           popupParent: () => (this.deps.window.isDestroyed() ? null : this.deps.window),
@@ -169,6 +164,14 @@ export class ServiceViewManager {
       if (pid) map.set(pid, view.instanceId);
     }
     return map;
+  }
+
+  /** Resolves which service a WebContents belongs to; null for anything else. */
+  instanceIdFor(contents: WebContents): string | null {
+    for (const view of this.views.values()) {
+      if (view.getView()?.webContents === contents) return view.instanceId;
+    }
+    return null;
   }
 
   runningCount(): number {

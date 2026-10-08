@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { session as electronSession, WebContentsView, type Rectangle, type Session } from 'electron';
 import type { ServiceDefinition, ServiceInstance, ServiceRuntimeState } from '@shared/types/service';
 import { readBadgeFromTitle } from '@shared/utils/badges';
@@ -19,7 +20,6 @@ export interface ServiceViewDeps {
   sessionDir: string;
   isDev: boolean;
   shortcuts: ShortcutMatcher;
-  notificationsAllowed: () => boolean;
   onState: (state: ServiceRuntimeState) => void;
   onCommand: (command: CommandId) => void;
   /** Creates popup windows (OAuth) parented to the main window. */
@@ -90,10 +90,7 @@ export class ServiceView {
     if (!configuredSessions.has(ses)) {
       configuredSessions.add(ses);
       ses.setUserAgent(resolveUserAgent(this.definition.webview.userAgent));
-      applyPermissionPolicy(ses, {
-        definition: this.definition,
-        notificationsAllowed: () => this.deps.notificationsAllowed(),
-      });
+      applyPermissionPolicy(ses, { definition: this.definition });
     }
     return ses;
   }
@@ -105,6 +102,8 @@ export class ServiceView {
     const view = new WebContentsView({
       webPreferences: {
         session: this.getSession(),
+        // Only bridges Web Notifications to the app; exposes nothing to the page.
+        preload: join(__dirname, '../preload/service.js'),
         sandbox: true,
         contextIsolation: true,
         nodeIntegration: false,

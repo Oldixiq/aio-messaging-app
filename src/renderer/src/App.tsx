@@ -9,11 +9,13 @@ import { SettingsPage } from './pages/settings/SettingsPage';
 import { useAppearance } from './hooks/useAppearance';
 import { useCommands } from './hooks/useCommands';
 import { useServiceViewSync } from './hooks/useServiceViewSync';
+import { useTaskbarBadge } from './hooks/useTaskbarBadge';
 import { useApp } from './stores/app-store';
 
 export function App() {
   useAppearance();
   useCommands();
+  useTaskbarBadge();
   const contentRef = useRef<HTMLDivElement>(null);
   useServiceViewSync(contentRef);
 

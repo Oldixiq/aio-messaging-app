@@ -18,8 +18,6 @@ const PERMISSION_MAP: Record<string, ServicePermission> = {
 
 export interface PermissionContext {
   definition: ServiceDefinition;
-  /** Evaluated on every request so settings changes apply immediately. */
-  notificationsAllowed: () => boolean;
 }
 
 function decide(ctx: PermissionContext, permission: string, origin: string): boolean {
@@ -28,7 +26,8 @@ function decide(ctx: PermissionContext, permission: string, origin: string): boo
   // Only the service's own domains get permissions, never off-site pages.
   const url = safeParseUrl(origin);
   if (!url || url.protocol !== 'https:' || !hostMatches(url.hostname, ctx.definition.webview.allowedDomains)) return false;
-  if (mapped === 'notifications') return ctx.notificationsAllowed();
+  // Notifications are always granted to the page so it keeps emitting them;
+  // the NotificationManager decides what is actually shown (mute, per-service).
   return true;
 }
 

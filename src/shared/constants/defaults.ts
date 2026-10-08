@@ -24,6 +24,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       enabled: true,
       sound: true,
       previews: true,
+      taskbarBadge: true,
     },
     performance: {
       suspendInactive: false,

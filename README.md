@@ -8,7 +8,7 @@ Architecture, stack decision, third‑party limitations and roadmap: **[docs/ARC
 
 ## Status
 
-Phase 1 (foundation) and Phase 2 (service management) are done. See the roadmap for what's next; features from later phases are labelled in the UI rather than faked.
+Phases 1–3 are done: foundation, service management, and unified notifications. See the roadmap for what's next; features from later phases are labelled in the UI rather than faked.
 
 ## Run it
 
@@ -52,3 +52,4 @@ Installers (NSIS) and automatic updates arrive in Phase 5.
 | ![Search](docs/screenshots/search-palette.png) | ![Add service](docs/screenshots/add-service.png) |
 | ![Performance](docs/screenshots/settings-performance.png) | ![Crash recovery](docs/screenshots/service-crashed.png) |
 | ![Services and accounts](docs/screenshots/settings-services.png) | ![Account switcher](docs/screenshots/account-switcher.png) |
+| ![Recent notifications](docs/screenshots/recent-notifications.png) | |
