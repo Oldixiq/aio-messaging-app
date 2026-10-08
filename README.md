@@ -8,7 +8,7 @@ Architecture, stack decision, third‑party limitations and roadmap: **[docs/ARC
 
 ## Status
 
-Phase 1 (foundation) is done. See the roadmap for what's next; features from later phases are labelled in the UI rather than faked.
+Phase 1 (foundation) and Phase 2 (service management) are done. See the roadmap for what's next; features from later phases are labelled in the UI rather than faked.
 
 ## Run it
 
@@ -39,6 +39,7 @@ Installers (NSIS) and automatic updates arrive in Phase 5.
 | Ctrl+Shift+H | Home |
 | Ctrl+Shift+M | Mute notifications |
 | Ctrl+B | Collapse/expand sidebar |
+| Alt+↑ / Alt+↓ | Move the focused sidebar service up / down |
 
 ## Where your data lives
 
@@ -50,3 +51,4 @@ Installers (NSIS) and automatic updates arrive in Phase 5.
 |---|---|
 | ![Search](docs/screenshots/search-palette.png) | ![Add service](docs/screenshots/add-service.png) |
 | ![Performance](docs/screenshots/settings-performance.png) | ![Crash recovery](docs/screenshots/service-crashed.png) |
+| ![Services and accounts](docs/screenshots/settings-services.png) | ![Account switcher](docs/screenshots/account-switcher.png) |

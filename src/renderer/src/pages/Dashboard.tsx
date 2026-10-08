@@ -43,7 +43,7 @@ export function Dashboard() {
         <div className="empty-card">
           <h2>Bring your conversations together</h2>
           <p className="muted">Add WhatsApp, Discord, Telegram, Slack and more. Every account runs in its own isolated, sandboxed session on this PC.</p>
-          <button className="btn btn--primary" onClick={() => actions.openOverlay('add-service')}><PlusIcon size={16} /> Add a service</button>
+          <button className="btn btn--primary" onClick={() => actions.openAddService()}><PlusIcon size={16} /> Add a service</button>
         </div>
       ) : (
         <div className="dashboard__grid">
@@ -82,7 +82,7 @@ export function Dashboard() {
                   <small className="muted">{inst.label}</small>
                 </button>
               ))}
-              <button className="quick-grid__item quick-grid__item--add" onClick={() => actions.openOverlay('add-service')}>
+              <button className="quick-grid__item quick-grid__item--add" onClick={() => actions.openAddService()}>
                 <span className="quick-grid__plus"><PlusIcon /></span>
                 <span>Add</span>
               </button>
