@@ -30,10 +30,11 @@ export interface AppSettings {
     taskbarBadge: boolean;
   };
   performance: {
-    /** Planned for Phase 4; persisted so the choice survives the upgrade. */
+    /** Unload services not used for `suspendAfterMinutes` (sessions are kept). */
     suspendInactive: boolean;
     suspendAfterMinutes: number;
-    reduceBackgroundActivity: boolean;
+    /** Unload the least recently used service when the PC runs low on memory. */
+    suspendOnLowMemory: boolean;
   };
 }
 

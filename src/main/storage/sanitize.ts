@@ -72,7 +72,7 @@ export function sanitizeLabel(value: unknown): string | null {
 
 export function sanitizeInstance(raw: unknown): ServiceInstance | null {
   if (!isObject(raw)) return null;
-  const { id, type, label, enabled, notifications, createdAt } = raw;
+  const { id, type, label, enabled, notifications, keepAwake, createdAt } = raw;
   if (typeof id !== 'string' || !ID_RE.test(id)) return null;
   if (typeof type !== 'string' || !getServiceDefinition(type)) return null;
   const notif = isObject(notifications) ? notifications : {};
@@ -85,6 +85,7 @@ export function sanitizeInstance(raw: unknown): ServiceInstance | null {
       enabled: typeof notif['enabled'] === 'boolean' ? notif['enabled'] : true,
       sound: typeof notif['sound'] === 'boolean' ? notif['sound'] : true,
     },
+    keepAwake: keepAwake === true,
     createdAt: typeof createdAt === 'number' ? createdAt : Date.now(),
   };
 }

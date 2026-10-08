@@ -28,7 +28,7 @@ function ServiceRow({ instance, index, count, dragProps, dragClass }: {
     if (next && next !== instance.label) void api.invoke('services:update', instance.id, { label: next });
     else setLabel(instance.label);
   };
-  const status = !instance.enabled ? 'Disabled' : runtime?.status === 'idle' || !runtime ? 'Not loaded' : runtime.status === 'ready' ? 'Running' : runtime.status;
+  const status = !instance.enabled ? 'Disabled' : runtime?.status === 'idle' || !runtime ? 'Not loaded' : runtime.status === 'ready' ? 'Running' : runtime.status === 'suspended' ? 'Sleeping' : runtime.status;
 
   return (
     <div className={`service-row${dragClass}`} {...dragProps}>

@@ -42,6 +42,17 @@ export function ServiceHost() {
     );
   }
 
+  if (status === 'suspended') {
+    return (
+      <div className="state-panel">
+        <div className="state-panel__icon"><ServiceAvatar definition={definition} favicon={runtime?.favicon} size={40} dimmed /></div>
+        <h2>{name} is asleep</h2>
+        <p>It was unloaded to save memory. You’re still signed in.</p>
+        <button className="btn btn--primary" onClick={() => void api.invoke('view:activate', instance.id)}>Wake {name}</button>
+      </div>
+    );
+  }
+
   return (
     <div className="state-panel state-panel--loading">
       <div className="pulse"><ServiceAvatar definition={definition} favicon={runtime?.favicon} size={56} /></div>

@@ -100,6 +100,7 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
       label: sanitizeLabel(label) ?? (existing.length === 0 ? 'Personal' : `Account ${existing.length + 1}`),
       enabled: true,
       notifications: { enabled: true, sound: true },
+      keepAwake: false,
       createdAt: Date.now(),
     };
     config.setServices([...config.get().services, instance]);
@@ -113,6 +114,7 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
     const next: ServiceInstance = { ...inst };
     if ('label' in p) next.label = sanitizeLabel(p['label']) ?? inst.label;
     if ('enabled' in p) next.enabled = assert.boolean(p['enabled'], 'enabled');
+    if ('keepAwake' in p) next.keepAwake = assert.boolean(p['keepAwake'], 'keepAwake');
     if ('notifications' in p) {
       const n = assert.object(p['notifications'], 'notifications');
       next.notifications = {
@@ -220,7 +222,7 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
     const menu = Menu.buildFromTemplate([
       { label: instanceName(inst.id), enabled: false },
       { type: 'separator' },
-      { label: 'Reload', click: () => view?.reload() },
+      { label: 'Reload', click: () => (view?.isCreated() ? view.reload() : views.activate(inst.id)) },
       {
         label: 'Notifications',
         type: 'checkbox',
@@ -233,6 +235,17 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
           if (inst.enabled && config.get().ui.activeInstanceId === inst.id) views.showDashboard();
           setInstance({ enabled: !inst.enabled });
         },
+      },
+      {
+        label: 'Sleep now',
+        enabled: !!view?.isCreated(),
+        click: () => views.suspend(inst.id, 'manual'),
+      },
+      {
+        label: 'Never sleep',
+        type: 'checkbox',
+        checked: inst.keepAwake,
+        click: () => setInstance({ keepAwake: !inst.keepAwake }),
       },
       ...(env.isDev ? [{ label: 'Open DevTools', click: () => view?.openDevTools() }] : []),
       { type: 'separator' },
@@ -251,7 +264,13 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
   handle('view:activate', (id) => views.activate(requireInstance(id).id));
   handle('view:set-bounds', (bounds) => views.setBounds(assert.rect(bounds)));
   handle('view:set-occluded', (occluded) => views.setOccluded(assert.boolean(occluded, 'occluded')));
-  handle('view:reload', (id) => views.get(requireInstance(id).id)?.reload());
+  handle('view:reload', (id) => {
+    const inst = requireInstance(id);
+    // A sleeping or never-opened service is woken through activate so it gets attached.
+    if (views.get(inst.id)?.isCreated()) views.get(inst.id)?.reload();
+    else views.activate(inst.id);
+  });
+  handle('view:suspend', (id) => views.suspend(requireInstance(id).id, 'manual'));
   handle('view:navigate', (id, action) => views.get(requireInstance(id).id)?.navigate(assert.oneOf(action, ['back', 'forward', 'home'] as const, 'action')));
   handle('view:open-devtools', (id) => {
     if (env.isDev) views.get(requireInstance(id).id)?.openDevTools();

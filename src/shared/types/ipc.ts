@@ -1,5 +1,5 @@
 import type { AppConfig, AppSettings, DeepPartial } from './config';
-import type { ServiceRuntimeState, ServiceInstance } from './service';
+import type { ServiceRuntimeState, ServiceInstance, ServiceStateUpdate } from './service';
 import type { AppInfo, MetricsSnapshot, Rect, UpdateState } from './app';
 import type { CommandId } from '../constants/commands';
 import type { NotificationRecord } from './notifications';
@@ -17,7 +17,7 @@ export interface InvokeChannels {
   'settings:update': { args: [patch: DeepPartial<AppSettings>]; result: AppConfig };
   'services:add': { args: [type: string, label: string]; result: ServiceInstance };
   'services:update': {
-    args: [id: string, patch: Partial<Pick<ServiceInstance, 'label' | 'enabled' | 'notifications'>>];
+    args: [id: string, patch: Partial<Pick<ServiceInstance, 'label' | 'enabled' | 'notifications' | 'keepAwake'>>];
     result: AppConfig;
   };
   'services:remove': { args: [id: string]; result: boolean };
@@ -37,6 +37,8 @@ export interface InvokeChannels {
   /** Temporarily hide the service view so shell overlays (dialogs, settings) are visible. */
   'view:set-occluded': { args: [occluded: boolean]; result: string | null };
   'view:reload': { args: [id: string]; result: void };
+  /** Puts a service to sleep now (unloads it; the session is kept). */
+  'view:suspend': { args: [id: string]; result: void };
   'view:navigate': { args: [id: string, action: 'back' | 'forward' | 'home']; result: void };
   'view:open-devtools': { args: [id: string]; result: void };
   'privacy:clear-cache': { args: [id: string | null]; result: void };
@@ -54,7 +56,7 @@ export interface InvokeChannels {
 /** Push channels (main -> renderer). */
 export interface EventChannels {
   'config:changed': AppConfig;
-  'service:state': ServiceRuntimeState;
+  'service:state': ServiceStateUpdate;
   'service:removed': string;
   command: CommandId;
   /** Main asks the shell to open the add-service dialog, optionally preselecting a service type. */

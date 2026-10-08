@@ -111,6 +111,8 @@ export interface ServiceInstance {
     enabled: boolean;
     sound: boolean;
   };
+  /** Exempt from automatic sleeping (e.g. a service you need notifications from at all times). */
+  keepAwake: boolean;
   createdAt: number;
 }
 
@@ -120,7 +122,8 @@ export type ServiceStatus =
   | 'ready'
   | 'error' // page failed to load
   | 'crashed' // renderer process died
-  | 'unresponsive';
+  | 'unresponsive'
+  | 'suspended'; // unloaded to save resources; session kept, reloads when opened
 
 /** Live state of a running service view, owned by the main process. */
 export interface ServiceRuntimeState {
@@ -139,3 +142,6 @@ export interface ServiceRuntimeState {
   offsiteHost: string | null;
   error?: { code: number; description: string; url: string };
 }
+
+/** Incremental state update sent to the shell: only the fields that changed. */
+export type ServiceStateUpdate = Partial<ServiceRuntimeState> & { instanceId: string };

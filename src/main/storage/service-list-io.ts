@@ -68,6 +68,7 @@ export function importServiceList(path: string, existing: ServiceInstance[]): Im
         enabled: typeof n?.enabled === 'boolean' ? n.enabled : true,
         sound: typeof n?.sound === 'boolean' ? n.sound : true,
       },
+      keepAwake: false,
       createdAt: Date.now(),
     });
   }

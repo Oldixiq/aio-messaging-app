@@ -1,6 +1,6 @@
 import type { BrowserWindow, Rectangle, WebContents } from 'electron';
 import type { AppConfig } from '@shared/types/config';
-import type { ServiceRuntimeState } from '@shared/types/service';
+import type { ServiceRuntimeState, ServiceStateUpdate } from '@shared/types/service';
 import type { CommandId } from '@shared/constants/commands';
 import { getServiceDefinition } from '@integrations/index';
 import { createLogger } from '../logger';
@@ -12,6 +12,12 @@ import { ServiceView } from './service-view';
 
 const log = createLogger('views');
 
+const SWEEP_INTERVAL_MS = 60_000;
+/** Below this share of free physical memory, unload the least recently used service. */
+const LOW_MEMORY_RATIO = 0.1;
+
+export type SuspendReason = 'inactive' | 'low-memory' | 'manual';
+
 export interface ServiceViewManagerDeps {
   window: BrowserWindow;
   config: ConfigStore;
@@ -19,7 +25,7 @@ export interface ServiceViewManagerDeps {
   isDev: boolean;
   shortcuts: ShortcutMatcher;
   onCommand: (command: CommandId) => void;
-  emitState: (state: ServiceRuntimeState) => void;
+  emitState: (update: ServiceStateUpdate) => void;
   emitRemoved: (instanceId: string) => void;
 }
 
@@ -32,10 +38,52 @@ export class ServiceViewManager {
   private readonly views = new Map<string, ServiceView>();
   private bounds: Rectangle = { x: 0, y: 0, width: 0, height: 0 };
   private occluded = false;
+  /** Last time each service was on screen; drives inactivity and LRU decisions. */
+  private readonly lastUsed = new Map<string, number>();
 
   constructor(private readonly deps: ServiceViewManagerDeps) {
     this.sync(deps.config.get());
     deps.config.on('changed', (config) => this.sync(config));
+    setInterval(() => this.sweep(), SWEEP_INTERVAL_MS).unref();
+  }
+
+  /** Services that may be put to sleep automatically right now, least recently used first. */
+  private sleepCandidates(): ServiceView[] {
+    const active = this.activeView();
+    return [...this.views.values()]
+      .filter((v) => {
+        if (!v.isCreated() || v === active || v.isAudible()) return false;
+        return !(this.deps.config.getInstance(v.instanceId)?.keepAwake ?? false);
+      })
+      .sort((a, b) => (this.lastUsed.get(a.instanceId) ?? 0) - (this.lastUsed.get(b.instanceId) ?? 0));
+  }
+
+  /** Periodic housekeeping: sleep inactive services, and one more when memory is low. */
+  sweep(now = Date.now()): void {
+    const { performance } = this.deps.config.get().settings;
+    if (performance.suspendInactive) {
+      const limit = performance.suspendAfterMinutes * 60_000;
+      for (const view of this.sleepCandidates()) {
+        if (now - (this.lastUsed.get(view.instanceId) ?? 0) >= limit) this.suspend(view.instanceId, 'inactive');
+      }
+    }
+    if (performance.suspendOnLowMemory) {
+      const { total, free } = process.getSystemMemoryInfo();
+      if (total > 0 && free / total < LOW_MEMORY_RATIO) {
+        const victim = this.sleepCandidates()[0];
+        if (victim) this.suspend(victim.instanceId, 'low-memory');
+      }
+    }
+  }
+
+  /** Unloads a service's page and process. Its session stays; opening it reloads it. */
+  suspend(id: string, reason: SuspendReason): void {
+    const view = this.views.get(id);
+    if (!view?.isCreated()) return;
+    if (reason !== 'manual' && view === this.activeView()) return;
+    log.info(`suspending ${view.definition.id} (${reason})`);
+    this.detach(view, 'suspended');
+    if (view === this.activeView()) this.layout();
   }
 
   /** Reconciles running views with the configured service list. */
@@ -53,30 +101,30 @@ export class ServiceViewManager {
       }
       const definition = getServiceDefinition(instance.type);
       if (!definition) continue;
-      this.views.set(
-        instance.id,
-        new ServiceView(instance, definition, {
+      const view = new ServiceView(instance, definition, {
           sessionDir: sessionDirFor(this.deps.paths, instance.type, instance.id),
           isDev: this.deps.isDev,
           shortcuts: this.deps.shortcuts,
-          onState: (state) => this.onState(state),
+          onState: (update) => this.onState(update),
           onCommand: this.deps.onCommand,
           popupParent: () => (this.deps.window.isDestroyed() ? null : this.deps.window),
-        }),
-      );
+      });
+      this.views.set(instance.id, view);
+      // Later updates are incremental, so the shell gets the full state once.
+      this.deps.emitState(view.getState());
     }
     this.layout();
   }
 
-  private onState(state: ServiceRuntimeState): void {
-    this.deps.emitState(state);
-    if (state.instanceId === this.deps.config.get().ui.activeInstanceId) this.layout();
+  private onState(update: ServiceStateUpdate): void {
+    this.deps.emitState(update);
+    if (update.instanceId === this.deps.config.get().ui.activeInstanceId && 'status' in update) this.layout();
   }
 
-  private detach(view: ServiceView): void {
+  private detach(view: ServiceView, status: 'idle' | 'suspended' = 'idle'): void {
     const native = view.getView();
     if (native && !this.deps.window.isDestroyed()) this.deps.window.contentView.removeChildView(native);
-    view.destroy();
+    view.destroy(status);
   }
 
   private dispose(id: string, view: ServiceView): void {
@@ -110,12 +158,18 @@ export class ServiceViewManager {
       const native = view.ensureCreated();
       this.deps.window.contentView.addChildView(native);
     }
+    const now = Date.now();
+    const previous = this.activeView();
+    if (previous) this.lastUsed.set(previous.instanceId, now);
+    this.lastUsed.set(id, now);
     this.deps.config.updateUi({ view: 'service', activeInstanceId: id });
     this.layout();
     if (!this.occluded) view.focus();
   }
 
   showDashboard(): void {
+    const previous = this.activeView();
+    if (previous) this.lastUsed.set(previous.instanceId, Date.now());
     this.deps.config.updateUi({ view: 'dashboard' });
     this.layout();
   }

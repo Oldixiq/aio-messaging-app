@@ -335,3 +335,8 @@ kbd, .kbd {
 .recent-list__meta { flex: none; font-size: 12px; text-align: right; }
 .row-title { display: inline-flex; align-items: center; gap: 8px; }
 .mini-toggle { display: inline-flex; align-items: center; gap: 8px; margin-right: 12px; font-size: 12px; }
+
+/* Sleeping services */
+.side-item.is-sleeping .avatar { filter: grayscale(0.85); opacity: 0.55; }
+.side-item.is-sleeping .side-item__label::after { content: ' · sleeping'; }
+.perf-usage { font-size: 12px; font-variant-numeric: tabular-nums; }

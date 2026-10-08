@@ -43,7 +43,12 @@ export const selectSettings = (s: AppState) => s.config?.settings ?? null;
 
 export async function initAppStore(): Promise<void> {
   api.on('config:changed', (config) => appStore.set({ config }));
-  api.on('service:state', (state) => appStore.set((s) => ({ runtime: { ...s.runtime, [state.instanceId]: state } })));
+  // Updates are incremental (only changed fields), merged onto the last full state.
+  api.on('service:state', (update) =>
+    appStore.set((s) => ({
+      runtime: { ...s.runtime, [update.instanceId]: { ...s.runtime[update.instanceId], ...update } as ServiceRuntimeState },
+    })),
+  );
   api.on('ui:add-service', (type) => actions.openAddService(type));
   api.on('notifications:changed', (notifications) => appStore.set({ notifications }));
   api.on('service:removed', (id) =>
