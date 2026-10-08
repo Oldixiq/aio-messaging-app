@@ -11,7 +11,7 @@ import { writeJsonFileAtomic } from './json-file';
  * could sign someone in.
  */
 interface ExportFile {
-  format: 'aio-messenger/services';
+  format: 'veya/services';
   version: 1;
   exportedAt: string;
   services: { type: string; label: string; enabled: boolean; notifications: { enabled: boolean; sound: boolean } }[];
@@ -22,7 +22,7 @@ const MAX_IMPORT_SERVICES = 200;
 
 export function exportServiceList(path: string, services: ServiceInstance[]): void {
   const file: ExportFile = {
-    format: 'aio-messenger/services',
+    format: 'veya/services',
     version: 1,
     exportedAt: new Date().toISOString(),
     services: services.map(({ type, label, enabled, notifications }) => ({ type, label, enabled, notifications })),
@@ -44,7 +44,9 @@ export function importServiceList(path: string, existing: ServiceInstance[]): Im
   const raw = readFileSync(path);
   if (raw.byteLength > MAX_IMPORT_BYTES) throw new Error('File is too large to be a service list');
   const data = JSON.parse(raw.toString('utf8')) as Partial<ExportFile>;
-  if (data.format !== 'aio-messenger/services' || !Array.isArray(data.services)) throw new Error('Not an AIO Messenger service list');
+  // 'aio-messenger/services' is the format from before the app was renamed Veya.
+  const formats: unknown[] = ['veya/services', 'aio-messenger/services'];
+  if (!formats.includes(data.format) || !Array.isArray(data.services)) throw new Error('Not a Veya service list');
 
   const key = (type: string, label: string) => `${type}\u0000${label.toLowerCase()}`;
   const seen = new Set(existing.map((s) => key(s.type, s.label)));

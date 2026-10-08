@@ -44,7 +44,7 @@ export function createMainWindow(opts: { stateFile: string; show: boolean }): Br
     minWidth: 720,
     minHeight: 480,
     show: false,
-    title: 'AIO Messenger',
+    title: 'Veya',
     backgroundColor: nativeTheme.shouldUseDarkColors ? TITLEBAR_COLORS.dark.color : TITLEBAR_COLORS.light.color,
     icon: join(__dirname, '../../resources/icon.png'),
     // Custom title bar with native Windows caption buttons (Window Controls Overlay).

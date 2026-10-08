@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 /**
  * Local data layout (all under the per-user app data folder, e.g.
- * %APPDATA%\AIO Messenger on Windows):
+ * %APPDATA%\Veya on Windows):
  *
  *   config.json          app settings + list of services (no secrets)
  *   window-state.json    window size/position

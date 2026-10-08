@@ -10,7 +10,7 @@ export function chromeUserAgent(): string {
   return app.userAgentFallback
     .replace(/\sElectron\/\S+/i, '')
     .replace(new RegExp(`\\s${app.getName().replace(/[^\w-]/g, '')}\\/\\S+`, 'i'), '')
-    .replace(/\saio-messenger\/\S+/i, '');
+    .replace(/\sveya\/\S+/i, '');
 }
 
 export function resolveUserAgent(policy: UserAgentPolicy | undefined): string {

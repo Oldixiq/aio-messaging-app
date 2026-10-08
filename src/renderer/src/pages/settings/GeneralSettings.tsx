@@ -14,7 +14,7 @@ export function GeneralSettings() {
       <SettingGroup title="Startup">
         <SettingRow
           title={`Start with ${osName}`}
-          description={loginSupported ? 'Open AIO Messenger when you sign in.' : 'Available in the installed app (not in development builds).'}
+          description={loginSupported ? 'Open Veya when you sign in.' : 'Available in the installed app (not in development builds).'}
           disabled={!loginSupported}
         >
           <Toggle label="Start with Windows" checked={general.startWithWindows} disabled={!loginSupported} onChange={(v) => set({ startWithWindows: v })} />

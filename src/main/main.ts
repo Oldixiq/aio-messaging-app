@@ -22,10 +22,10 @@ import { NotificationManager } from './notifications/notification-manager';
 
 // Development builds use their own profile so they never touch real sessions.
 if (env.userDataOverride) app.setPath('userData', env.userDataOverride);
-else if (env.isDev) app.setPath('userData', join(app.getPath('appData'), 'AIO Messenger (dev)'));
+else if (env.isDev) app.setPath('userData', join(app.getPath('appData'), 'Veya (dev)'));
 
-app.setName('AIO Messenger');
-if (env.isWindows) app.setAppUserModelId('com.aio.messenger');
+app.setName('Veya');
+if (env.isWindows) app.setAppUserModelId('com.veya.messenger');
 
 const paths = getPaths();
 initLogFile(paths.logs);

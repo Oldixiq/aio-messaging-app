@@ -168,7 +168,7 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
     const win = deps.getWindow();
     const options = {
       title: 'Export service list',
-      defaultPath: 'aio-messenger-services.json',
+      defaultPath: 'veya-services.json',
       filters: [{ name: 'Service list', extensions: ['json'] }],
     };
     const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);

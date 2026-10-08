@@ -10,7 +10,7 @@ export function createTray(handlers: { show: () => void; toggleMute: () => void;
   const image = nativeImage.createFromPath(join(__dirname, '../../resources/tray.png'));
   image.addRepresentation({ scaleFactor: 2, buffer: nativeImage.createFromPath(join(__dirname, '../../resources/tray@2x.png')).toPNG() });
   const tray = new Tray(image);
-  tray.setToolTip('AIO Messenger');
+  tray.setToolTip('Veya');
   tray.on('click', handlers.show);
 
   let last = '';
@@ -18,10 +18,10 @@ export function createTray(handlers: { show: () => void; toggleMute: () => void;
     const key = `${muted}|${unread}`;
     if (key === last) return;
     last = key;
-    tray.setToolTip(unread > 0 ? `AIO Messenger – ${unread} unread` : 'AIO Messenger');
+    tray.setToolTip(unread > 0 ? `Veya – ${unread} unread` : 'Veya');
     tray.setContextMenu(
       Menu.buildFromTemplate([
-        { label: 'Open AIO Messenger', click: handlers.show },
+        { label: 'Open Veya', click: handlers.show },
         { type: 'separator' },
         { label: 'Mute notifications', type: 'checkbox', checked: muted, click: handlers.toggleMute },
         { type: 'separator' },

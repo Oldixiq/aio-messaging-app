@@ -1,6 +1,8 @@
-# AIO Messenger
+<p align="center"><img src="docs/logo.png" alt="Veya" width="128" height="128"></p>
 
-An all‑in‑one messaging app for Windows: WhatsApp, Messenger, Instagram, Discord, Telegram, Slack, Teams, Google Chat, Gmail, Reddit and X in one window, each account in its own isolated, sandboxed session. No servers, no analytics.
+# Veya
+
+Veya is an all‑in‑one messaging app for Windows: WhatsApp, Messenger, Instagram, Discord, Telegram, Slack, Teams, Google Chat, Gmail, Reddit and X in one window, each account in its own isolated, sandboxed session. No servers, no analytics.
 
 ![Dashboard](docs/screenshots/dashboard-dark.png)
 
@@ -16,13 +18,13 @@ Requirements: Node.js 20+ and npm. Windows 10/11 is the target; it also runs on 
 
 ```bash
 npm install
-npm run dev        # development with hot reload (separate "AIO Messenger (dev)" profile)
+npm run dev        # development with hot reload (separate "Veya (dev)" profile)
 npm run build      # production build into out/
 npm start          # run the production build
 npm run typecheck
 ```
 
-Optional environment variables (see `.env.example`): `AIO_LOG_LEVEL`, `AIO_OPEN_DEVTOOLS=1`, `AIO_USER_DATA_DIR`.
+Optional environment variables (see `.env.example`): `VEYA_LOG_LEVEL`, `VEYA_OPEN_DEVTOOLS=1`, `VEYA_USER_DATA_DIR`.
 
 `npm run dist` builds the Windows installer into `dist/`. Signing, releases and automatic updates are described in [docs/RELEASING.md](docs/RELEASING.md).
 
@@ -43,7 +45,7 @@ Optional environment variables (see `.env.example`): `AIO_LOG_LEVEL`, `AIO_OPEN_
 
 ## Where your data lives
 
-`%APPDATA%\AIO Messenger\` – `config.json` (settings, no secrets), `sessions\<service>\<account>\` (each account's private browser profile), `logs\`. Settings › Privacy shows the exact paths and has per‑account log out, cache clearing and "clear everything".
+`%APPDATA%\Veya\` – `config.json` (settings, no secrets), `sessions\<service>\<account>\` (each account's private browser profile), `logs\`. Settings › Privacy shows the exact paths and has per‑account log out, cache clearing and "clear everything".
 
 ## Screenshots
 

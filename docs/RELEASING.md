@@ -9,15 +9,15 @@ npm install
 npm run dist
 ```
 
-This writes `dist/AIO-Messenger-Setup-<version>-x64.exe` (about 110 MB), its `.blockmap` and `latest.yml`. `dist/win-unpacked/` is the same app without the installer, useful for a quick test.
+This writes `dist/Veya-Setup-<version>-x64.exe` (about 110 MB), its `.blockmap` and `latest.yml`. `dist/win-unpacked/` is the same app without the installer, useful for a quick test.
 
 From Linux or macOS, electron-builder needs Wine (64‑ and 32‑bit) to edit the exe's icon and version info and to generate the uninstaller: on Ubuntu, `dpkg --add-architecture i386 && apt-get install wine wine32:i386`. The release workflow builds on Windows so none of this is needed there.
 
 ### What the installer does
 
-- Installs for the current user under `%LOCALAPPDATA%\Programs\AIO Messenger`, so no admin prompt. The install folder can be changed on the second page.
-- Adds Start menu and desktop shortcuts, and registers the app identity `com.aio.messenger`, so Windows notifications show "AIO Messenger" with its icon.
-- Uninstalling keeps your sessions and settings in `%APPDATA%\AIO Messenger`. Remove them first in **Settings → Privacy & data → Clear everything**, or delete that folder.
+- Installs for the current user under `%LOCALAPPDATA%\Programs\Veya`, so no admin prompt. The install folder can be changed on the second page.
+- Adds Start menu and desktop shortcuts, and registers the app identity `com.veya.messenger`, so Windows notifications show "Veya" with its icon.
+- Uninstalling keeps your sessions and settings in `%APPDATA%\Veya`. Remove them first in **Settings → Privacy & data → Clear everything**, or delete that folder.
 
 ### Hardening in installed builds
 

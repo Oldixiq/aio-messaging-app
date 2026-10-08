@@ -1,8 +1,8 @@
 {
-  "name": "aio-messenger",
-  "productName": "AIO Messenger",
+  "name": "veya",
+  "productName": "Veya",
   "version": "0.1.0",
-  "description": "All-in-one messaging desktop app for Windows",
+  "description": "Veya, the all-in-one messenger for Windows",
   "main": "out/main/main.js",
   "private": true,
   "license": "UNLICENSED",
@@ -31,7 +31,7 @@
     "vite": "^7.3.7"
   },
   "author": {
-    "name": "AIO Messenger contributors"
+    "name": "Veya contributors"
   },
   "homepage": "https://github.com/Oldixiq/aio-messaging-app",
   "repository": {

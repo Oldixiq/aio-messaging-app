@@ -18,7 +18,7 @@ export function TitleBar() {
     <header className="titlebar">
       <div className="titlebar__brand">
         <img src="./icon.png" alt="" width={18} height={18} draggable={false} />
-        <span>AIO Messenger</span>
+        <span>Veya</span>
       </div>
 
       <div className="titlebar__context">
