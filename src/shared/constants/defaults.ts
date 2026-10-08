@@ -29,7 +29,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     performance: {
       suspendInactive: false,
       suspendAfterMinutes: 30,
-      reduceBackgroundActivity: false,
+      suspendOnLowMemory: true,
     },
   },
   services: [],

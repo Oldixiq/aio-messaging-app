@@ -37,14 +37,15 @@ function SidebarItem({ instance, index, showLabelBadge, dragProps, dragClass }: 
 
   const unread = runtime?.unread ?? 0;
   const problem = runtime?.status === 'error' || runtime?.status === 'crashed';
+  const sleeping = runtime?.status === 'suspended';
   const muted = !instance.notifications.enabled;
   const shortcut = index < 9 ? ` (Ctrl+${index + 1})` : '';
-  const tooltip = `${definition.name} – ${instance.label}${shortcut}${unread ? `\n${unread} unread` : ''}${problem ? '\nNeeds attention' : ''}`;
+  const tooltip = `${definition.name} – ${instance.label}${shortcut}${unread ? `\n${unread} unread` : ''}${problem ? '\nNeeds attention' : ''}${sleeping ? '\nSleeping to save memory – click to wake' : ''}`;
 
   return (
     <button
       {...dragProps}
-      className={`side-item${active ? ' is-active' : ''}${!instance.enabled ? ' is-disabled' : ''}${dragClass}`}
+      className={`side-item${active ? ' is-active' : ''}${!instance.enabled ? ' is-disabled' : ''}${sleeping ? ' is-sleeping' : ''}${dragClass}`}
       title={tooltip}
       onClick={() => void actions.activate(instance.id)}
       onKeyDown={(e: KeyboardEvent) => {

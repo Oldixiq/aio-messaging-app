@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { session as electronSession, WebContentsView, type Rectangle, type Session } from 'electron';
-import type { ServiceDefinition, ServiceInstance, ServiceRuntimeState } from '@shared/types/service';
+import type { ServiceDefinition, ServiceInstance, ServiceRuntimeState, ServiceStateUpdate } from '@shared/types/service';
 import { readBadgeFromTitle } from '@shared/utils/badges';
 import { hostMatches, safeParseUrl } from '@shared/utils/domains';
 import { createLogger, type Logger } from '../logger';
@@ -20,7 +20,8 @@ export interface ServiceViewDeps {
   sessionDir: string;
   isDev: boolean;
   shortcuts: ShortcutMatcher;
-  onState: (state: ServiceRuntimeState) => void;
+  /** Receives only the fields that changed; skipped when nothing did. */
+  onState: (update: ServiceStateUpdate, state: ServiceRuntimeState) => void;
   onCommand: (command: CommandId) => void;
   /** Creates popup windows (OAuth) parented to the main window. */
   popupParent: () => Electron.BrowserWindow | null;
@@ -259,8 +260,20 @@ export class ServiceView {
   }
 
   private patch(partial: Partial<ServiceRuntimeState>): void {
+    const changes: ServiceStateUpdate = { instanceId: this.instanceId };
+    let changed = false;
+    for (const key of Object.keys(partial) as (keyof ServiceRuntimeState)[]) {
+      const next = partial[key];
+      const prev = this.state[key];
+      const same = key === 'error' ? JSON.stringify(prev) === JSON.stringify(next) : prev === next;
+      if (!same) {
+        (changes as Record<string, unknown>)[key] = next;
+        changed = true;
+      }
+    }
+    if (!changed) return;
     this.state = { ...this.state, ...partial };
-    this.deps.onState(this.state);
+    this.deps.onState(changes, this.state);
   }
 
   load(): void {
@@ -272,11 +285,9 @@ export class ServiceView {
     });
   }
 
+  /** Reloads a running page. Not-yet-created or sleeping views are woken by the manager instead. */
   reload(): void {
-    if (!this.view) {
-      this.ensureCreated();
-      return;
-    }
+    if (!this.view) return;
     const wc = this.view.webContents;
     if (this.state.status === 'crashed' || this.state.status === 'error' || wc.isCrashed() || !wc.getURL()) {
       this.load();
@@ -341,14 +352,23 @@ export class ServiceView {
     if (this.view) this.load();
   }
 
-  /** Destroys the view and its renderer process. Session data stays on disk. */
-  destroy(): void {
+  /**
+   * Destroys the view and its renderer process. Session data stays on disk.
+   * `suspended` keeps the last known unread count and favicon for the sidebar.
+   */
+  destroy(status: 'idle' | 'suspended' = 'idle'): void {
     if (!this.view) return;
-    this.log.info('destroying view');
+    this.log.info(status === 'suspended' ? 'suspending view' : 'destroying view');
     const wc = this.view.webContents;
     this.view = null;
     this.hasLoadedOnce = false;
     if (!wc.isDestroyed()) wc.close();
-    this.patch({ status: 'idle', canGoBack: false, canGoForward: false });
+    this.patch({ status, canGoBack: false, canGoForward: false, offsiteHost: null });
+  }
+
+  /** True while the page is playing sound (a call, a voice message): never put to sleep. */
+  isAudible(): boolean {
+    const wc = this.view?.webContents;
+    return !!wc && !wc.isDestroyed() && wc.isCurrentlyAudible();
   }
 }

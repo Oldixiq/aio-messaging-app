@@ -11,7 +11,7 @@ const INVOKE_CHANNELS = new Set<InvokeChannel>([
   'config:get', 'settings:update',
   'services:add', 'services:update', 'services:remove', 'services:reorder', 'services:states',
   'menu:service-context', 'menu:account-switcher', 'services:move', 'services:export', 'services:import',
-  'view:show-dashboard', 'view:activate', 'view:set-bounds', 'view:set-occluded', 'view:reload', 'view:navigate', 'view:open-devtools',
+  'view:show-dashboard', 'view:activate', 'view:set-bounds', 'view:set-occluded', 'view:reload', 'view:suspend', 'view:navigate', 'view:open-devtools',
   'privacy:clear-cache', 'privacy:logout', 'privacy:clear-all',
   'metrics:get', 'updater:get-state', 'updater:check',
   'notifications:history', 'notifications:clear-history', 'app:set-badge',
