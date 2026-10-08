@@ -69,7 +69,7 @@ export function ServicesSettings() {
       const result = await api.invoke('services:import');
       if (result) flash(`Imported ${result.added} account${result.added === 1 ? '' : 's'}${result.skipped ? `, skipped ${result.skipped} already added or unknown` : ''}. Sign in to each one when you open it.`);
     } catch {
-      flash('That file isn’t an AIO Messenger service list.');
+      flash('That file isn’t a Veya service list.');
     }
   };
   const runExport = async () => {

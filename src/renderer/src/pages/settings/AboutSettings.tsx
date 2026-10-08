@@ -39,7 +39,7 @@ export function AboutSettings() {
         <div className="about">
           <img src="./icon.png" alt="" width={56} height={56} />
           <div>
-            <h3>AIO Messenger {info?.version}</h3>
+            <h3>Veya {info?.version}</h3>
             <p className="muted">
               {info?.platform}-{info?.arch} · Electron {info?.electron} · Chromium {info?.chromium}{info?.isDev ? ' · development build' : ''}
             </p>

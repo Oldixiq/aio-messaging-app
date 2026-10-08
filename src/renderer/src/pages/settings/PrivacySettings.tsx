@@ -19,7 +19,7 @@ export function PrivacySettings() {
     <>
       <SettingGroup title="Your data stays on this PC">
         <div className="prose">
-          <p>AIO Messenger has no servers. Messages, sign-ins and settings never leave your computer except to talk directly to the services you add. There is no analytics or telemetry.</p>
+          <p>Veya has no servers. Messages, sign-ins and settings never leave your computer except to talk directly to the services you add. There is no analytics or telemetry.</p>
           <p>The app never sees or stores your passwords: you sign in on each service’s own page, and the service’s cookies are kept in that account’s private, isolated browser profile. On Windows, Chromium encrypts those cookies with your Windows account (DPAPI).</p>
         </div>
       </SettingGroup>

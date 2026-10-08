@@ -15,9 +15,9 @@ export const env = {
   isDev: !app.isPackaged,
   isWindows: process.platform === 'win32',
   isMac: process.platform === 'darwin',
-  logLevel: readLogLevel(process.env['AIO_LOG_LEVEL'], app.isPackaged ? 'info' : 'debug'),
-  openShellDevTools: !app.isPackaged && process.env['AIO_OPEN_DEVTOOLS'] === '1',
-  userDataOverride: !app.isPackaged ? process.env['AIO_USER_DATA_DIR'] || null : null,
+  logLevel: readLogLevel(process.env['VEYA_LOG_LEVEL'], app.isPackaged ? 'info' : 'debug'),
+  openShellDevTools: !app.isPackaged && process.env['VEYA_OPEN_DEVTOOLS'] === '1',
+  userDataOverride: !app.isPackaged ? process.env['VEYA_USER_DATA_DIR'] || null : null,
   /** Set by electron-vite in development. */
   rendererDevUrl: !app.isPackaged ? process.env['ELECTRON_RENDERER_URL'] ?? null : null,
   startHidden: process.argv.includes('--hidden'),

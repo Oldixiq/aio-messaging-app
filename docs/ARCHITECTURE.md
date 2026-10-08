@@ -1,4 +1,4 @@
-# AIO Messenger: architecture, limitations and roadmap
+# Veya: architecture, limitations and roadmap
 
 This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phases 1–5 are implemented in this repository; see [Phase status](#6-roadmap).
 
@@ -85,7 +85,7 @@ ARM64: Electron ships win‑arm64 builds; electron‑builder can target `--arm64
 ### Isolation and storage
 
 ```
-%APPDATA%\AIO Messenger\
+%APPDATA%\Veya\
   config.json                      settings + service list (no secrets)
   window-state.json
   sessions\whatsapp\<account-id>\  Chromium profile for that account only
@@ -96,7 +96,7 @@ ARM64: Electron ships win‑arm64 builds; electron‑builder can target `--arm64
 
 - Removing an account deletes its session folder at the next start (Windows locks files Chromium has open).
 - "Clear all application data" schedules a full wipe and restarts.
-- Development builds use a separate `AIO Messenger (dev)` profile.
+- Development builds use a separate `Veya (dev)` profile.
 
 ### Security model
 
@@ -155,7 +155,7 @@ Cross‑cutting:
 - **Unified message search** is not possible from web clients: none of them expose search to other apps, and scraping their DOM would be unreliable and invasive. The `capabilities.search` slot exists for services with real APIs (Telegram, Gmail) later. The search palette today searches services, settings and commands, and says so.
 - **Recent conversations** on the dashboard are built from the notifications the services emit while the app runs (sender + preview), held in memory only. There is no way to list conversations the service didn't notify about.
 - **In‑page sounds.** Some services (WhatsApp) also play a sound from inside the page. The app can't silence just that sound without muting calls too, so it's controlled in the service's own settings.
-- **Toasts from development builds** on Windows may be attributed to "Electron" instead of AIO Messenger; installed builds register their own app identity (`com.aio.messenger`).
+- **Toasts from development builds** on Windows may be attributed to "Electron" instead of Veya; installed builds register their own app identity (`com.veya.messenger`).
 - **Terms of service:** we load each service's official client without modifying its behaviour. Custom CSS is cosmetic only; no custom JavaScript ships in Phase 1.
 
 ## 6. Roadmap

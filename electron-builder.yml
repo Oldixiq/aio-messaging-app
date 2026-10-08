@@ -1,8 +1,8 @@
 # Windows packaging. See docs/RELEASING.md for signing and publishing.
-appId: com.aio.messenger # must match app.setAppUserModelId in src/main/main.ts (toasts)
-productName: AIO Messenger
-copyright: Copyright © 2026 AIO Messenger contributors
-artifactName: AIO-Messenger-Setup-${version}-${arch}.${ext}
+appId: com.veya.messenger # must match app.setAppUserModelId in src/main/main.ts (toasts)
+productName: Veya
+copyright: Copyright © 2026 Veya contributors
+artifactName: Veya-Setup-${version}-${arch}.${ext}
 
 directories:
   output: dist
@@ -48,7 +48,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: AIO Messenger
+  shortcutName: Veya
   installerIcon: resources/icon.ico
   uninstallerIcon: resources/icon.ico
   # Signed-in sessions live in %APPDATA%; keep them unless the user removes them
