@@ -8,6 +8,7 @@ import { getPaths } from './storage/paths';
 import { runPendingCleanup } from './storage/cleanup';
 import { ConfigStore } from './storage/config-store';
 import { hardenApp } from './security/app-hardening';
+import { registerAppScheme, serveShell } from './security/app-protocol';
 import { createMainWindow, titleBarOverlay } from './windows/main-window';
 import { ServiceViewManager } from './services/service-view-manager';
 import { chromeUserAgent } from './services/user-agent';
@@ -16,6 +17,7 @@ import { attachShortcuts, ShortcutMatcher } from './system/shortcuts';
 import { createTray, type TrayController } from './system/tray';
 import { applyLoginItem } from './system/startup';
 import { UnconfiguredUpdateProvider, UpdaterService } from './updater/updater';
+import { canSelfUpdate, ElectronUpdaterProvider } from './updater/electron-updater-provider';
 import { NotificationManager } from './notifications/notification-manager';
 
 // Development builds use their own profile so they never touch real sessions.
@@ -31,6 +33,8 @@ const log = createLogger('app');
 
 process.on('uncaughtException', (error) => log.error('uncaught exception', error));
 process.on('unhandledRejection', (reason) => log.error('unhandled rejection', reason));
+
+registerAppScheme();
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -54,6 +58,7 @@ async function start(): Promise<void> {
   hardenApp();
 
   await app.whenReady();
+  serveShell(join(__dirname, '../renderer'));
   log.info(`starting ${app.getVersion()} (electron ${process.versions.electron}, ${process.platform}-${process.arch}, dev=${env.isDev})`);
 
   // Must run before any session is opened: deletes data of removed accounts.
@@ -120,14 +125,10 @@ async function start(): Promise<void> {
     emitRemoved: (id) => send('service:removed', id),
   });
 
-  const updater = new UpdaterService(
-    new UnconfiguredUpdateProvider(
-      env.isDev
-        ? 'Updates are disabled in development builds.'
-        : 'This build has no update feed configured yet. Signed installers with automatic updates arrive in Phase 5.',
-    ),
-  );
+  const updateBlocker = canSelfUpdate();
+  const updater = new UpdaterService(updateBlocker ? new UnconfiguredUpdateProvider(updateBlocker) : new ElectronUpdaterProvider());
   updater.on('state', (state) => send('updater:state', state));
+  updater.setAutoCheck(settings.general.checkForUpdates);
 
   const notifications = new NotificationManager({
     config,
@@ -180,6 +181,7 @@ async function start(): Promise<void> {
     ) {
       applyLoginItem(next.settings.general.startWithWindows, next.settings.general.startMinimized);
     }
+    if (prev.general.checkForUpdates !== next.settings.general.checkForUpdates) updater.setAutoCheck(next.settings.general.checkForUpdates);
     refreshTray();
     notifications.prune(new Set(next.services.map((s) => s.id)));
   });

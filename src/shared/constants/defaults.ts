@@ -12,6 +12,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       closeToTray: true,
       launchBehavior: 'dashboard',
       language: 'en',
+      checkForUpdates: true,
     },
     appearance: {
       theme: 'system',

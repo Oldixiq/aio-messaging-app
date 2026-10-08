@@ -13,7 +13,7 @@ const INVOKE_CHANNELS = new Set<InvokeChannel>([
   'menu:service-context', 'menu:account-switcher', 'services:move', 'services:export', 'services:import',
   'view:show-dashboard', 'view:activate', 'view:set-bounds', 'view:set-occluded', 'view:reload', 'view:suspend', 'view:navigate', 'view:open-devtools',
   'privacy:clear-cache', 'privacy:logout', 'privacy:clear-all',
-  'metrics:get', 'updater:get-state', 'updater:check',
+  'metrics:get', 'updater:get-state', 'updater:check', 'updater:download', 'updater:install',
   'notifications:history', 'notifications:clear-history', 'app:set-badge',
 ]);
 const EVENT_CHANNELS = new Set<EventChannel>(['config:changed', 'service:state', 'service:removed', 'command', 'updater:state', 'ui:add-service', 'notifications:changed']);

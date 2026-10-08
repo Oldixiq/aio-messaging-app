@@ -5,9 +5,9 @@ import { createLogger } from '../logger';
 const log = createLogger('updater');
 
 /**
- * Pluggable update backend. Phase 5 adds an implementation backed by
- * electron-updater (signed NSIS builds + a release feed). The contract covers
- * the whole lifecycle so the UI never changes when a real provider lands.
+ * Pluggable update backend. Installed builds use electron-updater
+ * (./electron-updater-provider.ts); development builds and builds without an
+ * update feed use UnconfiguredUpdateProvider, which says so in the UI.
  */
 export interface UpdateProvider {
   /** `null` when updates are possible; otherwise a user-facing reason. */
@@ -18,7 +18,7 @@ export interface UpdateProvider {
   install(): void;
 }
 
-/** Used until packaging/release infrastructure exists. Reports that honestly. */
+/** Used when this build can't update itself. Reports why instead of pretending. */
 export class UnconfiguredUpdateProvider implements UpdateProvider {
   constructor(private readonly reason: string) {}
   unsupportedReason(): string {
@@ -35,13 +35,31 @@ export class UnconfiguredUpdateProvider implements UpdateProvider {
   }
 }
 
+const AUTO_CHECK_DELAY_MS = 30_000;
+const AUTO_CHECK_INTERVAL_MS = 6 * 60 * 60_000;
+
 export class UpdaterService extends EventEmitter<{ state: [UpdateState] }> {
   private state: UpdateState;
+  private timer: NodeJS.Timeout | null = null;
 
   constructor(private readonly provider: UpdateProvider) {
     super();
     const reason = provider.unsupportedReason();
     this.state = reason ? { kind: 'unsupported', reason } : { kind: 'idle', lastChecked: null };
+  }
+
+  /** Checks shortly after launch and then every few hours, while `enabled`. Never downloads on its own. */
+  setAutoCheck(enabled: boolean): void {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    if (!enabled || this.state.kind === 'unsupported') return;
+    const schedule = (delay: number) => {
+      this.timer = setTimeout(() => {
+        void this.check().finally(() => schedule(AUTO_CHECK_INTERVAL_MS));
+      }, delay);
+      this.timer.unref();
+    };
+    schedule(AUTO_CHECK_DELAY_MS);
   }
 
   getState(): UpdateState {
@@ -54,14 +72,15 @@ export class UpdaterService extends EventEmitter<{ state: [UpdateState] }> {
   }
 
   async check(): Promise<UpdateState> {
-    if (this.state.kind === 'unsupported' || this.state.kind === 'checking' || this.state.kind === 'downloading') return this.state;
+    const busy = ['unsupported', 'checking', 'downloading', 'ready'] as const;
+    if ((busy as readonly string[]).includes(this.state.kind)) return this.state;
     this.set({ kind: 'checking' });
     try {
       const result = await this.provider.check();
       this.set(result ? { kind: 'available', version: result.version } : { kind: 'idle', lastChecked: Date.now() });
     } catch (error) {
       log.warn('update check failed', error);
-      this.set({ kind: 'error', message: error instanceof Error ? error.message : 'Update check failed' });
+      this.set({ kind: 'error', message: 'Could not check for updates. Check your connection and try again.' });
     }
     return this.state;
   }

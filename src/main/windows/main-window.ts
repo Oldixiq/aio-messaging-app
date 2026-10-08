@@ -5,6 +5,7 @@ import { env } from '../env';
 import { createLogger } from '../logger';
 import { readJsonFile, writeJsonFileAtomic } from '../storage/json-file';
 import { openExternalSafely } from '../services/navigation-policy';
+import { SHELL_URL } from '../security/app-protocol';
 
 const log = createLogger('window');
 
@@ -101,7 +102,7 @@ export function createMainWindow(opts: { stateFile: string; show: boolean }): Br
   win.on('unmaximize', saveState);
 
   if (env.rendererDevUrl) void win.loadURL(env.rendererDevUrl);
-  else void win.loadFile(join(__dirname, '../renderer/index.html'));
+  else void win.loadURL(SHELL_URL);
 
   return win;
 }

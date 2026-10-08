@@ -51,6 +51,8 @@ export interface InvokeChannels {
   'app:set-badge': { args: [count: number, image: string | null]; result: void };
   'updater:get-state': { args: []; result: UpdateState };
   'updater:check': { args: []; result: UpdateState };
+  'updater:download': { args: []; result: void };
+  'updater:install': { args: []; result: void };
 }
 
 /** Push channels (main -> renderer). */

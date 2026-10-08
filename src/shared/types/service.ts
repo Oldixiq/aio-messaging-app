@@ -45,7 +45,7 @@ export interface BadgePolicy {
   /**
    * `title`: parse the unread count from the page title, e.g. "(3) Discord".
    * `none`: the service exposes nothing reliable; show no count.
-   * DOM-based extraction per service is added in Phase 3 via `inject` scripts.
+   * DOM-based extraction per service is a later addition (see the roadmap).
    */
   strategy: 'title' | 'none';
   /** Regex whose first capture group is the unread count. Defaults to `^\((\d+)\)`. */
