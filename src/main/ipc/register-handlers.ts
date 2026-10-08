@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { app, dialog, Menu, shell, type BrowserWindow } from 'electron';
+import { app, dialog, Menu, nativeImage, shell, type BrowserWindow } from 'electron';
 import type { AppSettings, DeepPartial } from '@shared/types/config';
 import type { ServiceInstance } from '@shared/types/service';
 import type { AppInfo } from '@shared/types/app';
@@ -17,6 +17,7 @@ import { openExternalSafely } from '../services/navigation-policy';
 import { collectMetrics } from '../system/metrics';
 import { loginItemSupported } from '../system/startup';
 import type { UpdaterService } from '../updater/updater';
+import type { NotificationManager } from '../notifications/notification-manager';
 import { createLogger } from '../logger';
 
 const log = createLogger('handlers');
@@ -27,6 +28,7 @@ export interface HandlerDeps {
   views: ServiceViewManager;
   paths: AppPaths;
   updater: UpdaterService;
+  notifications: NotificationManager;
   relaunch: () => void;
   /** Opens the shell's add-service dialog, optionally preselecting a service type. */
   requestAddService: (type: string | null) => void;
@@ -289,6 +291,22 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
       activeServices: views.runningCount(),
     }),
   );
+
+  handle('notifications:history', () => deps.notifications.getHistory());
+  handle('notifications:clear-history', () => deps.notifications.clearHistory());
+
+  handle('app:set-badge', (count, image) => {
+    if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) throw new TypeError('count must be a non-negative integer');
+    const win = deps.getWindow();
+    if (process.platform === 'win32') {
+      if (!win) return;
+      const valid = typeof image === 'string' && image.startsWith('data:image/png;base64,') && image.length < 50_000;
+      const icon = count > 0 && valid ? nativeImage.createFromDataURL(image) : null;
+      win.setOverlayIcon(icon && !icon.isEmpty() ? icon : null, count > 0 ? `${count} unread` : '');
+    } else {
+      app.setBadgeCount(count);
+    }
+  });
 
   handle('updater:get-state', () => deps.updater.getState());
   handle('updater:check', () => deps.updater.check());

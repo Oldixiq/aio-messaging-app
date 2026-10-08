@@ -47,7 +47,10 @@ export default defineConfig({
     resolve: { alias },
     build: {
       rollupOptions: {
-        input: { shell: resolve(__dirname, 'src/preload/shell.ts') },
+        input: {
+          shell: resolve(__dirname, 'src/preload/shell.ts'),
+          service: resolve(__dirname, 'src/preload/service.ts'),
+        },
         // Sandboxed preloads cannot `require` arbitrary modules, so emit CJS.
         output: { format: 'cjs', entryFileNames: '[name].js' },
       },

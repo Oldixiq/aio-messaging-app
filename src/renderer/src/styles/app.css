@@ -322,3 +322,16 @@ kbd, .kbd {
   border-radius: 6px; color: var(--text-2); font-size: 13px;
 }
 .account-switch:hover { background: var(--surface-hover); color: var(--text); }
+
+/* Recent notifications */
+.card__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.card__header h2 { margin: 0; }
+.recent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.recent-list button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px; border-radius: 8px; text-align: left; }
+.recent-list button:hover { background: var(--surface-hover); }
+.recent-list__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.recent-list__text strong { font-weight: 600; }
+.recent-list__text span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-list__meta { flex: none; font-size: 12px; text-align: right; }
+.row-title { display: inline-flex; align-items: center; gap: 8px; }
+.mini-toggle { display: inline-flex; align-items: center; gap: 8px; margin-right: 12px; font-size: 12px; }

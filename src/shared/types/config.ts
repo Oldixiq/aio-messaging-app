@@ -26,6 +26,8 @@ export interface AppSettings {
     enabled: boolean;
     sound: boolean;
     previews: boolean;
+    /** Unread count on the taskbar icon (Windows overlay badge). */
+    taskbarBadge: boolean;
   };
   performance: {
     /** Planned for Phase 4; persisted so the choice survives the upgrade. */

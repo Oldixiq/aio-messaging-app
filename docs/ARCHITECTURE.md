@@ -1,6 +1,6 @@
 # AIO Messenger: architecture, limitations and roadmap
 
-This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phases 1 and 2 are implemented in this repository; see [Phase status](#6-roadmap).
+This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phases 1–3 are implemented in this repository; see [Phase status](#6-roadmap).
 
 ---
 
@@ -151,7 +151,9 @@ Cross‑cutting:
 - **Google sign‑in in embedded browsers.** Google can refuse with "This browser or app may not be secure". We present an honest Chrome user agent (Electron token removed); there is no legitimate bypass if Google still refuses. Services that offer "Sign in with Google" inherit this.
 - **Unread counts** come from what each web app exposes. Title‑based counts are implemented now; per‑service DOM readers (Phase 3) will be more precise, and can break when a service ships a redesign, so each reader is isolated in its integration folder and fails soft to "unknown".
 - **Unified message search** is not possible from web clients: none of them expose search to other apps, and scraping their DOM would be unreliable and invasive. The `capabilities.search` slot exists for services with real APIs (Telegram, Gmail) later. The search palette today searches services, settings and commands, and says so.
-- **Recent conversations** on the dashboard: only possible from notifications the services themselves emit (sender + preview). Planned for Phase 3; not shown before then.
+- **Recent conversations** on the dashboard are built from the notifications the services emit while the app runs (sender + preview), held in memory only. There is no way to list conversations the service didn't notify about.
+- **In‑page sounds.** Some services (WhatsApp) also play a sound from inside the page. The app can't silence just that sound without muting calls too, so it's controlled in the service's own settings.
+- **Toasts from development builds** on Windows may be attributed to "Electron" instead of AIO Messenger; installed builds register their own app identity (Phase 5).
 - **Terms of service:** we load each service's official client without modifying its behaviour. Custom CSS is cosmetic only; no custom JavaScript ships in Phase 1.
 
 ## 6. Roadmap
@@ -160,11 +162,11 @@ Cross‑cutting:
 |---|---|---|
 | **1. Foundation** | Window with custom title bar, sidebar (compact/expanded), service registry with 11 integrations, lazy per‑account `WebContentsView`s with isolated sessions, crash/error panels, navigation & permission policy, context menu, settings (all categories), themes + accent, persistent validated config, shortcuts, tray, close/minimize to tray, start with Windows (packaged builds), live performance metrics, privacy actions, add/remove/disable/rename/log out per account, Ctrl+K palette | **Done** |
 | 2. Service management | Drag‑to‑reorder in sidebar and settings (plus arrows, Alt+↑/↓ and context‑menu Move up/down), account switcher in the title bar when a service has several accounts, "Add another account" from the context menu, switcher and settings, export/import of the service list (never sessions; duplicates skipped). Verified: order and sessions persist across restarts, and one account's cookies are invisible to another account of the same service | **Done** |
-| 3. Notifications | Inject a minimal, isolated‑world script per service to intercept `new Notification()`; route through a unified manager → Windows toasts with service icon, sender, preview, click‑to‑open; per‑service sound/preview settings; DND; taskbar overlay badge; DOM badge readers where titles are insufficient; "recent conversations" from notifications | Planned |
+| 3. Notifications | A sandboxed service preload replaces the page's `Notification` (and `ServiceWorkerRegistration.showNotification`) in the main world before page scripts run and hands each notification to the main process. The unified `NotificationManager` applies global mute, per‑service on/off and sound, previews on/off, "not while you're looking at it", and a rate limit; shows a Windows toast titled with the service (and account), body `Sender: preview`, the sender's picture fetched through that account's session; clicking it opens the service and runs the page's own click handler (opening that chat). Taskbar overlay badge with the total unread. Home shows recent notifications, kept in memory only. Verified with a page in a service view: interception, toasts, mute, previews off, click‑through | **Done** |
 | 4. Performance | Suspend inactive services after N minutes (destroy view, keep session), restore on click; background throttling profiles; memory pressure handling; per‑service resource view with "unload" button | Planned |
 | 5. Packaging | electron‑builder NSIS installer (x64, then arm64), code signing, Electron fuses (cookie encryption, no `ELECTRON_RUN_AS_NODE`, asar integrity), electron‑updater with GitHub Releases provider, staged rollout and rollback to previous version on failed install | Planned |
 
-Later: per‑account custom icon/colour, screen‑share picker, native Telegram/Gmail integrations with real search, configurable shortcuts, i18n, spell‑check language picker.
+Later: DOM‑based unread readers for services whose title has no count (Slack), per‑account custom icon/colour, screen‑share picker, native Telegram/Gmail integrations with real search, configurable shortcuts, i18n, spell‑check language picker.
 
 ## 7. What was verified, and what wasn't
 

@@ -1,5 +1,6 @@
 import type { AppConfig, AppSettings, DeepPartial } from '@shared/types/config';
 import type { AppInfo } from '@shared/types/app';
+import type { NotificationRecord } from '@shared/types/notifications';
 import type { ServiceInstance, ServiceRuntimeState } from '@shared/types/service';
 import { api } from '../services/api';
 import { createStore, useStoreSelector } from './create-store';
@@ -17,6 +18,8 @@ interface AppState {
   backdrop: string | null;
   /** Service type to preselect when the add-service dialog opens. */
   addServicePreset: string | null;
+  /** Recent notifications (memory only, newest first). */
+  notifications: NotificationRecord[];
 }
 
 export const appStore = createStore<AppState>({
@@ -27,6 +30,7 @@ export const appStore = createStore<AppState>({
   overlay: null,
   backdrop: null,
   addServicePreset: null,
+  notifications: [],
 });
 
 export function useApp<S>(selector: (state: AppState) => S): S {
@@ -41,6 +45,7 @@ export async function initAppStore(): Promise<void> {
   api.on('config:changed', (config) => appStore.set({ config }));
   api.on('service:state', (state) => appStore.set((s) => ({ runtime: { ...s.runtime, [state.instanceId]: state } })));
   api.on('ui:add-service', (type) => actions.openAddService(type));
+  api.on('notifications:changed', (notifications) => appStore.set({ notifications }));
   api.on('service:removed', (id) =>
     appStore.set((s) => {
       const runtime = { ...s.runtime };
@@ -48,8 +53,13 @@ export async function initAppStore(): Promise<void> {
       return { runtime };
     }),
   );
-  const [config, info, states] = await Promise.all([api.invoke('config:get'), api.invoke('app:get-info'), api.invoke('services:states')]);
-  appStore.set({ config, info, runtime: Object.fromEntries(states.map((st) => [st.instanceId, st])) });
+  const [config, info, states, notifications] = await Promise.all([
+    api.invoke('config:get'),
+    api.invoke('app:get-info'),
+    api.invoke('services:states'),
+    api.invoke('notifications:history'),
+  ]);
+  appStore.set({ config, info, notifications, runtime: Object.fromEntries(states.map((st) => [st.instanceId, st])) });
 
   // Launch behaviour: dashboard, or reopen the last service.
   const { launchBehavior } = config.settings.general;

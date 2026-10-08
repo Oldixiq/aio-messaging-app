@@ -14,8 +14,9 @@ const INVOKE_CHANNELS = new Set<InvokeChannel>([
   'view:show-dashboard', 'view:activate', 'view:set-bounds', 'view:set-occluded', 'view:reload', 'view:navigate', 'view:open-devtools',
   'privacy:clear-cache', 'privacy:logout', 'privacy:clear-all',
   'metrics:get', 'updater:get-state', 'updater:check',
+  'notifications:history', 'notifications:clear-history', 'app:set-badge',
 ]);
-const EVENT_CHANNELS = new Set<EventChannel>(['config:changed', 'service:state', 'service:removed', 'command', 'updater:state', 'ui:add-service']);
+const EVENT_CHANNELS = new Set<EventChannel>(['config:changed', 'service:state', 'service:removed', 'command', 'updater:state', 'ui:add-service', 'notifications:changed']);
 
 const bridge: AioBridge = {
   invoke(channel, ...args) {

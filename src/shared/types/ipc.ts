@@ -2,6 +2,7 @@ import type { AppConfig, AppSettings, DeepPartial } from './config';
 import type { ServiceRuntimeState, ServiceInstance } from './service';
 import type { AppInfo, MetricsSnapshot, Rect, UpdateState } from './app';
 import type { CommandId } from '../constants/commands';
+import type { NotificationRecord } from './notifications';
 
 /**
  * Request/response channels (renderer -> main via ipcRenderer.invoke).
@@ -42,6 +43,10 @@ export interface InvokeChannels {
   'privacy:logout': { args: [id: string]; result: boolean };
   'privacy:clear-all': { args: []; result: boolean };
   'metrics:get': { args: []; result: MetricsSnapshot };
+  'notifications:history': { args: []; result: NotificationRecord[] };
+  'notifications:clear-history': { args: []; result: void };
+  /** Taskbar badge drawn by the shell (main has no canvas). `image` is a small PNG data URL. */
+  'app:set-badge': { args: [count: number, image: string | null]; result: void };
   'updater:get-state': { args: []; result: UpdateState };
   'updater:check': { args: []; result: UpdateState };
 }
@@ -55,6 +60,7 @@ export interface EventChannels {
   /** Main asks the shell to open the add-service dialog, optionally preselecting a service type. */
   'ui:add-service': string | null;
   'updater:state': UpdateState;
+  'notifications:changed': NotificationRecord[];
 }
 
 export type InvokeChannel = keyof InvokeChannels;

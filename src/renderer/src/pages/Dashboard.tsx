@@ -2,6 +2,62 @@ import { getServiceDefinition } from '@integrations/index';
 import { ServiceAvatar } from '../components/ServiceAvatar';
 import { PlusIcon, SearchIcon } from '../components/icons';
 import { actions, selectServices, useApp } from '../stores/app-store';
+import { api } from '../services/api';
+
+function timeAgo(at: number): string {
+  const s = Math.round((Date.now() - at) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min ago`;
+  return new Date(at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Built from the notifications services emitted since the app started; that
+ * is the only conversation data the services share. Kept in memory only.
+ */
+function RecentNotifications() {
+  const records = useApp((s) => s.notifications);
+  const services = useApp(selectServices);
+  const previews = useApp((s) => s.config?.settings.notifications.previews ?? true);
+  const favicons = useApp((s) => s.runtime);
+  const byId = new Map(services.map((s) => [s.id, s]));
+  const rows = records.slice(0, 8);
+
+  return (
+    <section className="card card--wide">
+      <div className="card__header">
+        <h2>Recent notifications</h2>
+        {rows.length > 0 && <button className="btn btn--small" onClick={() => void api.invoke('notifications:clear-history')}>Clear</button>}
+      </div>
+      {rows.length === 0 ? (
+        <p className="muted">
+          Messages that services notify you about while the app is running appear here. They’re kept in memory only and disappear when you quit.
+        </p>
+      ) : (
+        <ul className="recent-list">
+          {rows.map((r) => {
+            const inst = byId.get(r.instanceId);
+            const def = inst && getServiceDefinition(inst.type);
+            if (!inst || !def) return null;
+            return (
+              <li key={r.key}>
+                <button onClick={() => void actions.activate(inst.id)}>
+                  <ServiceAvatar definition={def} favicon={favicons[inst.id]?.favicon} size={30} />
+                  <span className="recent-list__text">
+                    <strong>{previews ? r.title : def.name}</strong>
+                    <span className="muted">{previews ? r.body || 'New notification' : 'New notification'}</span>
+                  </span>
+                  <span className="recent-list__meta muted">{def.name}{services.filter((s) => s.type === inst.type).length > 1 ? ` · ${inst.label}` : ''}<br />{timeAgo(r.at)}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 function greeting(date = new Date()): string {
   const h = date.getHours();
@@ -89,13 +145,7 @@ export function Dashboard() {
             </div>
           </section>
 
-          <section className="card card--wide">
-            <h2>Recent conversations</h2>
-            <p className="muted">
-              Not available yet. The services don’t share conversation lists with other apps. Phase 3 will collect sender and preview from the
-              notifications each service already shows, which is the only reliable source, and list them here.
-            </p>
-          </section>
+          <RecentNotifications />
         </div>
       )}
     </div>

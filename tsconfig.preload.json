@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "composite": true, "types": ["node"], "lib": ["ES2022", "DOM", "DOM.Iterable"] },
+  "include": ["src/preload/*.ts", "src/shared/**/*"],
+  "exclude": ["src/preload/*.d.ts"]
+}

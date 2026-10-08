@@ -16,6 +16,7 @@ import { attachShortcuts, ShortcutMatcher } from './system/shortcuts';
 import { createTray, type TrayController } from './system/tray';
 import { applyLoginItem } from './system/startup';
 import { UnconfiguredUpdateProvider, UpdaterService } from './updater/updater';
+import { NotificationManager } from './notifications/notification-manager';
 
 // Development builds use their own profile so they never touch real sessions.
 if (env.userDataOverride) app.setPath('userData', env.userDataOverride);
@@ -128,12 +129,21 @@ async function start(): Promise<void> {
   );
   updater.on('state', (state) => send('updater:state', state));
 
+  const notifications = new NotificationManager({
+    config,
+    views,
+    getWindow: () => (win.isDestroyed() ? null : win),
+    showWindow,
+    emitHistory: (records) => send('notifications:changed', records),
+  });
+
   registerIpcHandlers({
     getWindow: () => (win.isDestroyed() ? null : win),
     config,
     views,
     paths,
     updater,
+    notifications,
     requestAddService: (type) => {
       showWindow();
       send('ui:add-service', type);
@@ -171,6 +181,7 @@ async function start(): Promise<void> {
       applyLoginItem(next.settings.general.startWithWindows, next.settings.general.startMinimized);
     }
     refreshTray();
+    notifications.prune(new Set(next.services.map((s) => s.id)));
   });
   nativeTheme.on('updated', applyTheme);
 
