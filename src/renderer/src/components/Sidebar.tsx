@@ -1,9 +1,10 @@
-import { memo } from 'react';
+import type { DragEvent, KeyboardEvent } from 'react';
 import { getServiceDefinition } from '@integrations/index';
 import type { ServiceInstance } from '@shared/types/service';
 import { api } from '../services/api';
 import { actions, selectServices, useApp } from '../stores/app-store';
 import { usePrefersDark } from '../hooks/useAppearance';
+import { useDragReorder } from '../hooks/useDragReorder';
 import { ServiceAvatar } from './ServiceAvatar';
 import { BellIcon, BellOffIcon, HomeIcon, MoonIcon, PlusIcon, SettingsIcon, SidebarIcon, SunIcon } from './icons';
 
@@ -13,7 +14,21 @@ function formatCount(n: number): string {
   return n > 99 ? '99+' : String(n);
 }
 
-const SidebarItem = memo(function SidebarItem({ instance, index, showLabelBadge }: { instance: ServiceInstance; index: number; showLabelBadge: boolean }) {
+interface DragProps {
+  draggable: boolean;
+  onDragStart: (e: DragEvent<HTMLElement>) => void;
+  onDragOver: (e: DragEvent<HTMLElement>) => void;
+  onDrop: (e: DragEvent<HTMLElement>) => void;
+  onDragEnd: () => void;
+}
+
+function SidebarItem({ instance, index, showLabelBadge, dragProps, dragClass }: {
+  instance: ServiceInstance;
+  index: number;
+  showLabelBadge: boolean;
+  dragProps: DragProps;
+  dragClass: string;
+}) {
   const definition = getServiceDefinition(instance.type);
   const runtime = useApp((s) => s.runtime[instance.id]);
   const active = useApp((s) => s.config?.ui.view === 'service' && s.config.ui.activeInstanceId === instance.id && !s.settingsSection);
@@ -28,9 +43,17 @@ const SidebarItem = memo(function SidebarItem({ instance, index, showLabelBadge 
 
   return (
     <button
-      className={`side-item${active ? ' is-active' : ''}${!instance.enabled ? ' is-disabled' : ''}`}
+      {...dragProps}
+      className={`side-item${active ? ' is-active' : ''}${!instance.enabled ? ' is-disabled' : ''}${dragClass}`}
       title={tooltip}
       onClick={() => void actions.activate(instance.id)}
+      onKeyDown={(e: KeyboardEvent) => {
+        // Alt+Up/Down reorders without a mouse.
+        if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+          e.preventDefault();
+          void api.invoke('services:move', instance.id, e.key === 'ArrowUp' ? -1 : 1);
+        }
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
         void api.invoke('menu:service-context', instance.id);
@@ -55,7 +78,7 @@ const SidebarItem = memo(function SidebarItem({ instance, index, showLabelBadge 
       {unread > 0 && <span className="side-item__count">{formatCount(unread)}</span>}
     </button>
   );
-});
+}
 
 export function Sidebar() {
   const services = useApp(selectServices);
@@ -64,6 +87,10 @@ export function Sidebar() {
   const notificationsOn = useApp((s) => s.config?.settings.notifications.enabled ?? true);
   const theme = useApp((s) => s.config?.settings.appearance.theme ?? 'system');
   const dark = usePrefersDark();
+  const { itemProps, indicator } = useDragReorder(
+    services.map((s) => s.id),
+    (ids) => void actions.reorder(ids),
+  );
 
   // Only show account initials when a service type has more than one account.
   const typeCounts = new Map<string, number>();
@@ -80,9 +107,16 @@ export function Sidebar() {
 
       <div className="sidebar__list">
         {services.map((instance, index) => (
-          <SidebarItem key={instance.id} instance={instance} index={index} showLabelBadge={(typeCounts.get(instance.type) ?? 0) > 1} />
+          <SidebarItem
+            key={instance.id}
+            instance={instance}
+            index={index}
+            showLabelBadge={(typeCounts.get(instance.type) ?? 0) > 1}
+            dragProps={itemProps(instance.id)}
+            dragClass={indicator(instance.id)}
+          />
         ))}
-        <button className="side-item side-item--plain side-item--add" title="Add a service" onClick={() => actions.openOverlay('add-service')}>
+        <button className="side-item side-item--plain side-item--add" title="Add a service" onClick={() => actions.openAddService()}>
           <span className="side-item__pill" />
           <span className="side-item__icon side-item__glyph side-item__glyph--dashed"><PlusIcon /></span>
           <span className="side-item__text"><span className="side-item__name">Add service</span></span>

@@ -1,6 +1,6 @@
 # AIO Messenger: architecture, limitations and roadmap
 
-This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phase 1 is implemented in this repository; see [Phase status](#6-roadmap).
+This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phases 1 and 2 are implemented in this repository; see [Phase status](#6-roadmap).
 
 ---
 
@@ -158,13 +158,13 @@ Cross‑cutting:
 
 | Phase | Scope | Status |
 |---|---|---|
-| **1. Foundation** | Window with custom title bar, sidebar (compact/expanded), service registry with 11 integrations, lazy per‑account `WebContentsView`s with isolated sessions, crash/error panels, navigation & permission policy, context menu, settings (all categories), themes + accent, persistent validated config, shortcuts, tray, close/minimize to tray, start with Windows (packaged builds), live performance metrics, privacy actions, add/remove/disable/rename/log out per account, Ctrl+K palette | **Done** (this PR) |
-| 2. Service management | Drag‑to‑reorder in sidebar and settings, account switcher grouped by service, per‑account custom icon/colour, import/export of the service list (no sessions) | Next |
+| **1. Foundation** | Window with custom title bar, sidebar (compact/expanded), service registry with 11 integrations, lazy per‑account `WebContentsView`s with isolated sessions, crash/error panels, navigation & permission policy, context menu, settings (all categories), themes + accent, persistent validated config, shortcuts, tray, close/minimize to tray, start with Windows (packaged builds), live performance metrics, privacy actions, add/remove/disable/rename/log out per account, Ctrl+K palette | **Done** |
+| 2. Service management | Drag‑to‑reorder in sidebar and settings (plus arrows, Alt+↑/↓ and context‑menu Move up/down), account switcher in the title bar when a service has several accounts, "Add another account" from the context menu, switcher and settings, export/import of the service list (never sessions; duplicates skipped). Verified: order and sessions persist across restarts, and one account's cookies are invisible to another account of the same service | **Done** |
 | 3. Notifications | Inject a minimal, isolated‑world script per service to intercept `new Notification()`; route through a unified manager → Windows toasts with service icon, sender, preview, click‑to‑open; per‑service sound/preview settings; DND; taskbar overlay badge; DOM badge readers where titles are insufficient; "recent conversations" from notifications | Planned |
 | 4. Performance | Suspend inactive services after N minutes (destroy view, keep session), restore on click; background throttling profiles; memory pressure handling; per‑service resource view with "unload" button | Planned |
 | 5. Packaging | electron‑builder NSIS installer (x64, then arm64), code signing, Electron fuses (cookie encryption, no `ELECTRON_RUN_AS_NODE`, asar integrity), electron‑updater with GitHub Releases provider, staged rollout and rollback to previous version on failed install | Planned |
 
-Later: screen‑share picker, native Telegram/Gmail integrations with real search, configurable shortcuts, i18n, spell‑check language picker.
+Later: per‑account custom icon/colour, screen‑share picker, native Telegram/Gmail integrations with real search, configurable shortcuts, i18n, spell‑check language picker.
 
 ## 7. What was verified, and what wasn't
 

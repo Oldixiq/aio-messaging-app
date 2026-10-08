@@ -23,6 +23,12 @@ export interface InvokeChannels {
   'services:reorder': { args: [orderedIds: string[]]; result: AppConfig };
   /** Shows the native right-click menu for a sidebar item. */
   'menu:service-context': { args: [id: string]; result: void };
+  /** Native menu listing the other accounts of the same service. */
+  'menu:account-switcher': { args: [id: string]; result: void };
+  /** Moves one service by `delta` positions (keyboard-accessible reorder). */
+  'services:move': { args: [id: string, delta: number]; result: AppConfig };
+  'services:export': { args: []; result: boolean };
+  'services:import': { args: []; result: { added: number; skipped: number } | null };
   'services:states': { args: []; result: ServiceRuntimeState[] };
   'view:show-dashboard': { args: []; result: void };
   'view:activate': { args: [id: string]; result: void };
@@ -46,6 +52,8 @@ export interface EventChannels {
   'service:state': ServiceRuntimeState;
   'service:removed': string;
   command: CommandId;
+  /** Main asks the shell to open the add-service dialog, optionally preselecting a service type. */
+  'ui:add-service': string | null;
   'updater:state': UpdateState;
 }
 

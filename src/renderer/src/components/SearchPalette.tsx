@@ -45,7 +45,7 @@ export function SearchPalette() {
       });
     }
     if (match('home', 'dashboard')) out.push({ key: 'home', title: 'Home', subtitle: 'Dashboard', icon: <HomeIcon />, run: () => void actions.showDashboard() });
-    if (match('add service', 'new account')) out.push({ key: 'add', title: 'Add a service', subtitle: 'Command', icon: <PlusIcon />, run: () => actions.openOverlay('add-service') });
+    if (match('add service', 'new account')) out.push({ key: 'add', title: 'Add a service', subtitle: 'Command', icon: <PlusIcon />, run: () => actions.openAddService() });
     for (const [id, label] of SETTINGS) {
       if (match(label, 'settings')) out.push({ key: `s-${id}`, title: label, subtitle: 'Settings', icon: <SettingsIcon />, run: () => actions.openSettings(id) });
     }

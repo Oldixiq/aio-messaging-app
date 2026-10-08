@@ -134,6 +134,10 @@ async function start(): Promise<void> {
     views,
     paths,
     updater,
+    requestAddService: (type) => {
+      showWindow();
+      send('ui:add-service', type);
+    },
     relaunch: () => {
       quitting = true;
       views.destroyAll();

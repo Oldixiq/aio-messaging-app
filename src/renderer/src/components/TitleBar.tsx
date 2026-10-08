@@ -1,7 +1,7 @@
 import { getServiceDefinition } from '@integrations/index';
 import { api } from '../services/api';
 import { actions, useApp } from '../stores/app-store';
-import { BackIcon, ForwardIcon, GlobeIcon, HomeIcon, ReloadIcon, SearchIcon } from './icons';
+import { BackIcon, ChevronDownIcon, ForwardIcon, GlobeIcon, HomeIcon, ReloadIcon, SearchIcon } from './icons';
 
 /** Custom title bar. The native caption buttons are drawn by Windows to the right. */
 export function TitleBar() {
@@ -10,6 +10,7 @@ export function TitleBar() {
   const instance = useApp((s) => s.config?.services.find((x) => x.id === activeId) ?? null);
   const runtime = useApp((s) => (activeId ? s.runtime[activeId] : undefined));
   const definition = instance ? getServiceDefinition(instance.type) : undefined;
+  const siblingCount = useApp((s) => (instance ? s.config?.services.filter((x) => x.type === instance.type).length ?? 0 : 0));
 
   const onService = view === 'service' && instance && definition;
 
@@ -36,7 +37,13 @@ export function TitleBar() {
             </div>
             <div className="titlebar__title">
               <strong>{definition.name}</strong>
-              <span className="muted">{instance.label}</span>
+              {siblingCount > 1 ? (
+                <button className="account-switch no-drag" title={`Switch ${definition.name} account`} onClick={() => void api.invoke('menu:account-switcher', instance.id)}>
+                  {instance.label} <ChevronDownIcon size={13} />
+                </button>
+              ) : (
+                <span className="muted">{instance.label}</span>
+              )}
               {runtime?.offsiteHost && (
                 <button className="chip chip--warn no-drag" title={`Return to ${definition.name}`} onClick={() => void api.invoke('view:navigate', instance.id, 'home')}>
                   <GlobeIcon size={13} /> {runtime.offsiteHost} · Back to {definition.name}

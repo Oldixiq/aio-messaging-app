@@ -15,6 +15,8 @@ interface AppState {
   overlay: Overlay;
   /** Screenshot of the hidden service page, shown behind dialogs. */
   backdrop: string | null;
+  /** Service type to preselect when the add-service dialog opens. */
+  addServicePreset: string | null;
 }
 
 export const appStore = createStore<AppState>({
@@ -24,6 +26,7 @@ export const appStore = createStore<AppState>({
   settingsSection: null,
   overlay: null,
   backdrop: null,
+  addServicePreset: null,
 });
 
 export function useApp<S>(selector: (state: AppState) => S): S {
@@ -37,6 +40,7 @@ export const selectSettings = (s: AppState) => s.config?.settings ?? null;
 export async function initAppStore(): Promise<void> {
   api.on('config:changed', (config) => appStore.set({ config }));
   api.on('service:state', (state) => appStore.set((s) => ({ runtime: { ...s.runtime, [state.instanceId]: state } })));
+  api.on('ui:add-service', (type) => actions.openAddService(type));
   api.on('service:removed', (id) =>
     appStore.set((s) => {
       const runtime = { ...s.runtime };
@@ -76,7 +80,24 @@ export const actions = {
     appStore.set({ overlay });
   },
   closeOverlay() {
-    appStore.set({ overlay: null });
+    appStore.set({ overlay: null, addServicePreset: null });
+  },
+  openAddService(type: string | null = null) {
+    appStore.set({ overlay: 'add-service', addServicePreset: type });
+  },
+  /** Persists a new sidebar order; applied optimistically so drags feel instant. */
+  async reorder(orderedIds: string[]) {
+    const { config } = appStore.get();
+    if (!config) return;
+    const byId = new Map(config.services.map((s) => [s.id, s]));
+    const services = orderedIds.map((id) => byId.get(id)).filter((s): s is NonNullable<typeof s> => !!s);
+    if (services.length !== config.services.length) return;
+    appStore.set({ config: { ...config, services } });
+    try {
+      appStore.set({ config: await api.invoke('services:reorder', orderedIds) });
+    } catch {
+      appStore.set({ config: await api.invoke('config:get') });
+    }
   },
   async updateSettings(patch: DeepPartial<AppSettings>) {
     const config = await api.invoke('settings:update', patch);

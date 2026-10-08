@@ -11,6 +11,7 @@ import type { ConfigStore } from '../storage/config-store';
 import type { AppPaths } from '../storage/paths';
 import { sanitizeLabel } from '../storage/sanitize';
 import { scheduleFullWipe } from '../storage/cleanup';
+import { exportServiceList, importServiceList } from '../storage/service-list-io';
 import type { ServiceViewManager } from '../services/service-view-manager';
 import { openExternalSafely } from '../services/navigation-policy';
 import { collectMetrics } from '../system/metrics';
@@ -27,6 +28,8 @@ export interface HandlerDeps {
   paths: AppPaths;
   updater: UpdaterService;
   relaunch: () => void;
+  /** Opens the shell's add-service dialog, optionally preselecting a service type. */
+  requestAddService: (type: string | null) => void;
 }
 
 async function confirm(win: BrowserWindow | null, message: string, detail: string, confirmLabel: string): Promise<boolean> {
@@ -141,6 +144,70 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
     return config.setServices(ordered);
   });
 
+  const moveService = (id: string, delta: number) => {
+    const list = [...config.get().services];
+    const from = list.findIndex((s) => s.id === id);
+    const to = Math.max(0, Math.min(list.length - 1, from + delta));
+    if (from === -1 || from === to) return config.get();
+    const [item] = list.splice(from, 1);
+    list.splice(to, 0, item!);
+    return config.setServices(list);
+  };
+
+  handle('services:move', (id, delta) => {
+    const inst = requireInstance(id);
+    if (typeof delta !== 'number' || !Number.isInteger(delta) || Math.abs(delta) > 1000) throw new TypeError('delta must be an integer');
+    return moveService(inst.id, delta);
+  });
+
+  handle('services:export', async () => {
+    const win = deps.getWindow();
+    const options = {
+      title: 'Export service list',
+      defaultPath: 'aio-messenger-services.json',
+      filters: [{ name: 'Service list', extensions: ['json'] }],
+    };
+    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
+    if (result.canceled || !result.filePath) return false;
+    exportServiceList(result.filePath, config.get().services);
+    log.info(`exported ${config.get().services.length} service(s)`);
+    return true;
+  });
+
+  handle('services:import', async () => {
+    const win = deps.getWindow();
+    const options = {
+      title: 'Import service list',
+      properties: ['openFile' as const],
+      filters: [{ name: 'Service list', extensions: ['json'] }],
+    };
+    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+    const file = result.filePaths[0];
+    if (result.canceled || !file) return null;
+    const { added, skipped } = importServiceList(file, config.get().services);
+    if (added.length > 0) config.setServices([...config.get().services, ...added]);
+    log.info(`imported ${added.length} service(s), skipped ${skipped}`);
+    return { added: added.length, skipped };
+  });
+
+  handle('menu:account-switcher', (id) => {
+    const inst = requireInstance(id);
+    const def = getServiceDefinition(inst.type);
+    const siblings = config.get().services.filter((s) => s.type === inst.type);
+    const menu = Menu.buildFromTemplate([
+      ...siblings.map((s) => ({
+        label: s.label,
+        type: 'radio' as const,
+        checked: s.id === inst.id,
+        click: () => views.activate(s.id),
+      })),
+      { type: 'separator' },
+      { label: `Add another ${def?.name ?? ''} account…`, click: () => deps.requestAddService(inst.type) },
+    ]);
+    const win = deps.getWindow();
+    menu.popup(win ? { window: win } : {});
+  });
+
   handle('services:states', () => views.states());
 
   handle('menu:service-context', (id) => {
@@ -166,6 +233,10 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
         },
       },
       ...(env.isDev ? [{ label: 'Open DevTools', click: () => view?.openDevTools() }] : []),
+      { type: 'separator' },
+      { label: 'Move up', enabled: config.get().services[0]?.id !== inst.id, click: () => moveService(inst.id, -1) },
+      { label: 'Move down', enabled: config.get().services.at(-1)?.id !== inst.id, click: () => moveService(inst.id, 1) },
+      { label: `Add another ${getServiceDefinition(inst.type)?.name ?? ''} account…`, click: () => deps.requestAddService(inst.type) },
       { type: 'separator' },
       { label: 'Log out…', click: () => void ipcInvokeLocal('privacy:logout', inst.id) },
       { label: 'Remove…', click: () => void ipcInvokeLocal('services:remove', inst.id) },

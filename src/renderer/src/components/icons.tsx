@@ -28,6 +28,10 @@ export const SidebarIcon = base(<><rect x="3" y="4" width="18" height="16" rx="2
 export const CloseIcon = base(<><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>);
 export const AlertIcon = base(<><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>);
 export const GlobeIcon = base(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18" /></>);
+export const ChevronDownIcon = base(<path d="m6 9 6 6 6-6" />);
+export const GripIcon = base(<><circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" /></>);
+export const ArrowUpIcon = base(<><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></>);
+export const ArrowDownIcon = base(<><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></>);
 export const ChevronRightIcon = base(<path d="m9 18 6-6-6-6" />);
 export const GaugeIcon = base(<><path d="M12 14l4-4" /><path d="M3.3 19a10 10 0 1 1 17.4 0" /></>);
 export const ShieldIcon = base(<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />);

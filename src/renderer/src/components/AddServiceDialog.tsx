@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { SERVICE_DEFINITIONS } from '@integrations/index';
+import { getServiceDefinition, SERVICE_DEFINITIONS } from '@integrations/index';
 import type { ServiceCategory, ServiceDefinition } from '@shared/types/service';
 import { api } from '../services/api';
 import { actions, selectServices, useApp } from '../stores/app-store';
@@ -11,7 +11,8 @@ const CATEGORY_LABEL: Record<ServiceCategory, string> = { messaging: 'Messaging'
 
 export function AddServiceDialog() {
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<ServiceDefinition | null>(null);
+  const preset = useApp((s) => s.addServicePreset);
+  const [selected, setSelected] = useState<ServiceDefinition | null>(() => (preset ? getServiceDefinition(preset) ?? null : null));
   const services = useApp(selectServices);
 
   const filtered = useMemo(() => {

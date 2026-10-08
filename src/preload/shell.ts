@@ -10,12 +10,12 @@ const INVOKE_CHANNELS = new Set<InvokeChannel>([
   'app:get-info', 'app:open-data-folder', 'app:open-external',
   'config:get', 'settings:update',
   'services:add', 'services:update', 'services:remove', 'services:reorder', 'services:states',
-  'menu:service-context',
+  'menu:service-context', 'menu:account-switcher', 'services:move', 'services:export', 'services:import',
   'view:show-dashboard', 'view:activate', 'view:set-bounds', 'view:set-occluded', 'view:reload', 'view:navigate', 'view:open-devtools',
   'privacy:clear-cache', 'privacy:logout', 'privacy:clear-all',
   'metrics:get', 'updater:get-state', 'updater:check',
 ]);
-const EVENT_CHANNELS = new Set<EventChannel>(['config:changed', 'service:state', 'service:removed', 'command', 'updater:state']);
+const EVENT_CHANNELS = new Set<EventChannel>(['config:changed', 'service:state', 'service:removed', 'command', 'updater:state', 'ui:add-service']);
 
 const bridge: AioBridge = {
   invoke(channel, ...args) {
