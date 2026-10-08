@@ -1,0 +1,65 @@
+# Windows packaging. See docs/RELEASING.md for signing and publishing.
+appId: com.aio.messenger # must match app.setAppUserModelId in src/main/main.ts (toasts)
+productName: AIO Messenger
+copyright: Copyright © 2026 AIO Messenger contributors
+artifactName: AIO-Messenger-Setup-${version}-${arch}.${ext}
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - out/**
+  - resources/**
+  - package.json
+  - '!**/*.map'
+asarUnpack: []
+
+# Security switches compiled into the Electron binary (https://www.electronjs.org/docs/latest/tutorial/fuses).
+electronFuses:
+  runAsNode: false # the exe can't be used as a generic Node.js runtime
+  enableCookieEncryption: true # cookies on disk are encrypted with the OS key store (DPAPI)
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false # no --inspect debugging of the installed app
+  enableEmbeddedAsarIntegrityValidation: true # refuse a tampered app.asar
+  onlyLoadAppFromAsar: true
+  grantFileProtocolExtraPrivileges: false
+
+win:
+  icon: resources/icon.ico
+  # x64 only for now. Windows on ARM runs it under emulation; a native arm64
+  # build is `--arm64`, but electron-builder then ships one combined installer
+  # for both architectures at twice the size (see docs/RELEASING.md).
+  target:
+    - target: nsis
+      arch: [x64]
+  # Signing happens automatically when WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD
+  # (a .pfx) are set; see docs/RELEASING.md. Once releases are signed, add
+  #   publisherName: <the certificate's subject CN>
+  # here so the app refuses updates signed by anyone else. Unsigned builds must
+  # not set it, or every update would be rejected.
+  signtoolOptions:
+    rfc3161TimeStampServer: http://timestamp.digicert.com
+
+nsis:
+  oneClick: false
+  perMachine: false # installs for the current user, no admin prompt
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AIO Messenger
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  # Signed-in sessions live in %APPDATA%; keep them unless the user removes them
+  # from Settings > Privacy & data before uninstalling.
+  deleteAppDataOnUninstall: false
+  differentialPackage: true
+
+# Update feed. electron-builder writes it into the app as app-update.yml, and the
+# app only enables automatic updates when that file exists.
+publish:
+  provider: github
+  owner: Oldixiq
+  repo: aio-messaging-app
+  releaseType: draft

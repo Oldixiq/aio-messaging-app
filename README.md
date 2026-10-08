@@ -8,7 +8,7 @@ Architecture, stack decision, third‑party limitations and roadmap: **[docs/ARC
 
 ## Status
 
-Phases 1–4 are done: foundation, service management, unified notifications, and performance (sleeping services). See the roadmap for what's next; features from later phases are labelled in the UI rather than faked.
+All five phases are done: foundation, service management, unified notifications, performance (sleeping services), and the Windows installer with automatic updates. See the roadmap for what's next; features from later phases are labelled in the UI rather than faked.
 
 ## Run it
 
@@ -24,7 +24,7 @@ npm run typecheck
 
 Optional environment variables (see `.env.example`): `AIO_LOG_LEVEL`, `AIO_OPEN_DEVTOOLS=1`, `AIO_USER_DATA_DIR`.
 
-Installers (NSIS) and automatic updates arrive in Phase 5.
+`npm run dist` builds the Windows installer into `dist/`. Signing, releases and automatic updates are described in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Shortcuts
 

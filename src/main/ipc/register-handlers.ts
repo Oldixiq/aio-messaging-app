@@ -329,4 +329,6 @@ export function registerIpcHandlers(deps: HandlerDeps): void {
 
   handle('updater:get-state', () => deps.updater.getState());
   handle('updater:check', () => deps.updater.check());
+  handle('updater:download', () => deps.updater.download());
+  handle('updater:install', () => deps.updater.install());
 }

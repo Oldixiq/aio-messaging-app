@@ -1,0 +1,32 @@
+name: Release
+
+# Builds the Windows installer on a version tag (v1.2.3) and uploads it, with
+# the update feed (latest.yml), to a draft GitHub release. Publishing the draft
+# is a manual step, so nothing reaches users until someone presses "Publish".
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Build and upload installer
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional code signing: a base64-encoded .pfx and its password.
+          # Without them the installer is built unsigned (see docs/RELEASING.md).
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}

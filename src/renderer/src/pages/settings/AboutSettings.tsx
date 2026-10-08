@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { UpdateState } from '@shared/types/app';
-import { SettingGroup, SettingRow } from '../../components/controls';
+import { SettingGroup, SettingRow, Toggle } from '../../components/controls';
 import { api } from '../../services/api';
-import { useApp } from '../../stores/app-store';
+import { actions, useApp } from '../../stores/app-store';
 
 function describe(state: UpdateState | null): string {
   if (!state) return 'Checking…';
@@ -12,13 +12,21 @@ function describe(state: UpdateState | null): string {
     case 'checking': return 'Checking for updates…';
     case 'available': return `Version ${state.version} is available`;
     case 'downloading': return `Downloading… ${state.percent.toFixed(0)}%`;
-    case 'ready': return `Version ${state.version} will install on restart`;
+    case 'ready': return `Version ${state.version} is ready. It installs when you restart or quit.`;
     case 'error': return state.message;
   }
 }
 
+function UpdateAction({ state, onState }: { state: UpdateState | null; onState: (s: UpdateState) => void }) {
+  if (state?.kind === 'available') return <button className="btn btn--primary" onClick={() => void api.invoke('updater:download')}>Download</button>;
+  if (state?.kind === 'ready') return <button className="btn btn--primary" onClick={() => void api.invoke('updater:install')}>Restart and update</button>;
+  const busy = !state || state.kind === 'unsupported' || state.kind === 'checking' || state.kind === 'downloading';
+  return <button className="btn" disabled={busy} onClick={() => void api.invoke('updater:check').then(onState)}>Check now</button>;
+}
+
 export function AboutSettings() {
   const info = useApp((s) => s.info);
+  const autoCheck = useApp((s) => s.config?.settings.general.checkForUpdates ?? true);
   const [update, setUpdate] = useState<UpdateState | null>(null);
   useEffect(() => {
     void api.invoke('updater:get-state').then(setUpdate);
@@ -39,10 +47,11 @@ export function AboutSettings() {
         </div>
       </SettingGroup>
       <SettingGroup title="Updates">
-        <SettingRow title="Automatic updates" description={describe(update)}>
-          <button className="btn" disabled={!update || update.kind === 'unsupported' || update.kind === 'checking'} onClick={() => void api.invoke('updater:check').then(setUpdate)}>
-            Check now
-          </button>
+        <SettingRow title="Version" description={describe(update)}>
+          <UpdateAction state={update} onState={setUpdate} />
+        </SettingRow>
+        <SettingRow title="Check for updates automatically" description="At startup and every 6 hours. Updates download only when you choose." disabled={update?.kind === 'unsupported'}>
+          <Toggle label="Check for updates automatically" checked={autoCheck} disabled={update?.kind === 'unsupported'} onChange={(v) => void actions.updateSettings({ general: { checkForUpdates: v } })} />
         </SettingRow>
       </SettingGroup>
     </>

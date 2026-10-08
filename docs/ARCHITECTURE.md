@@ -1,6 +1,6 @@
 # AIO Messenger: architecture, limitations and roadmap
 
-This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phases 1–4 are implemented in this repository; see [Phase status](#6-roadmap).
+This document covers the first six items of the brief: requirements analysis, stack choice, architecture, project structure, third‑party limitations and the roadmap. Phases 1–5 are implemented in this repository; see [Phase status](#6-roadmap).
 
 ---
 
@@ -80,7 +80,7 @@ ARM64: Electron ships win‑arm64 builds; electron‑builder can target `--arm64
 - **ServiceViewManager** – reconciles running views with config, decides which view is attached/visible and where, handles occlusion and per‑process metrics, and puts services to sleep (inactivity, low memory, or on request). Views report state changes incrementally: only the fields that changed cross IPC.
 - **ConfigStore** – validated, debounced, atomic JSON persistence. Unknown/invalid keys are dropped, a corrupt file is moved aside and defaults are used.
 - **ShortcutMatcher** – resolves shortcuts in `before-input-event` for both the shell and every service page, so Ctrl+1…9 work even when WhatsApp has focus.
-- **UpdaterService** – full lifecycle (check → download → ready → install, with error state) behind an `UpdateProvider` interface. Today the provider honestly reports "not configured"; Phase 5 plugs in electron‑updater.
+- **UpdaterService** – full lifecycle (check → download → ready → install, with error state) behind an `UpdateProvider` interface. Installed Windows builds with a release feed use electron‑updater (`ElectronUpdaterProvider`); development builds and builds without a feed use `UnconfiguredUpdateProvider`, which shows why updates are unavailable.
 
 ### Isolation and storage
 
@@ -101,12 +101,14 @@ ARM64: Electron ships win‑arm64 builds; electron‑builder can target `--arm64
 ### Security model
 
 - All renderers: `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`.
-- Service pages get **no preload and no IPC**. They are just websites.
+- Service pages are just websites. Their only preload replaces `Notification` and sends one message type (`service:notification`), which main accepts only from real service views and validates.
 - Shell IPC: fixed allow‑list in the preload; main only answers the shell's top‑level frame; every argument is validated.
 - Shell CSP: `script-src 'self'`, no remote images (favicons are fetched through the service's own session and inlined as data URLs, so the shell never contacts third parties).
 - Permissions: deny by default. A service gets only what its definition lists (e.g. camera/mic for Discord), only for its own domains, and notifications only while enabled globally and for that account.
 - Navigation: https pages may load in the view (sign‑in flows go through unpredictable identity‑provider domains), but off‑site pages get no permissions and the title bar shows them with a "Back to <service>" chip. Non‑https schemes are opened externally (http, mailto) or blocked (custom app protocols, file).
 - `<webview>` attachment is blocked app‑wide.
+- The shell is served from `app://shell/` (a custom protocol registered only in the shell's session, path traversal rejected), not `file://`.
+- Installed builds set Electron fuses: no `ELECTRON_RUN_AS_NODE`, no `NODE_OPTIONS`/`--inspect`, encrypted cookies (DPAPI), asar integrity checked and required, no extra `file://` privileges. See [RELEASING.md](RELEASING.md).
 
 ## 4. Project structure
 
@@ -153,7 +155,7 @@ Cross‑cutting:
 - **Unified message search** is not possible from web clients: none of them expose search to other apps, and scraping their DOM would be unreliable and invasive. The `capabilities.search` slot exists for services with real APIs (Telegram, Gmail) later. The search palette today searches services, settings and commands, and says so.
 - **Recent conversations** on the dashboard are built from the notifications the services emit while the app runs (sender + preview), held in memory only. There is no way to list conversations the service didn't notify about.
 - **In‑page sounds.** Some services (WhatsApp) also play a sound from inside the page. The app can't silence just that sound without muting calls too, so it's controlled in the service's own settings.
-- **Toasts from development builds** on Windows may be attributed to "Electron" instead of AIO Messenger; installed builds register their own app identity (Phase 5).
+- **Toasts from development builds** on Windows may be attributed to "Electron" instead of AIO Messenger; installed builds register their own app identity (`com.aio.messenger`).
 - **Terms of service:** we load each service's official client without modifying its behaviour. Custom CSS is cosmetic only; no custom JavaScript ships in Phase 1.
 
 ## 6. Roadmap
@@ -164,7 +166,7 @@ Cross‑cutting:
 | 2. Service management | Drag‑to‑reorder in sidebar and settings (plus arrows, Alt+↑/↓ and context‑menu Move up/down), account switcher in the title bar when a service has several accounts, "Add another account" from the context menu, switcher and settings, export/import of the service list (never sessions; duplicates skipped). Verified: order and sessions persist across restarts, and one account's cookies are invisible to another account of the same service | **Done** |
 | 3. Notifications | A sandboxed service preload replaces the page's `Notification` (and `ServiceWorkerRegistration.showNotification`) in the main world before page scripts run and hands each notification to the main process. The unified `NotificationManager` applies global mute, per‑service on/off and sound, previews on/off, "not while you're looking at it", and a rate limit; shows a Windows toast titled with the service (and account), body `Sender: preview`, the sender's picture fetched through that account's session; clicking it opens the service and runs the page's own click handler (opening that chat). Taskbar overlay badge with the total unread. Home shows recent notifications, kept in memory only. Verified with a page in a service view: interception, toasts, mute, previews off, click‑through | **Done** |
 | 4. Performance | Sleeping services: a sleeping service's page and process are destroyed, its session stays, and opening it reloads it signed in. Sleep happens after N minutes unused (opt‑in, 1–120 min), when free memory drops below 10 % (least recently used first, on by default), or on request ("Sleep now" in the context menu and Performance page). Services playing sound and those marked "Never sleep" are exempt; the visible one is never slept automatically. Sidebar and service area show a sleeping state with a Wake button. Service state crosses IPC as diffs, not full objects. Performance page lists per‑service memory/CPU with Sleep/Open and "Never sleep". Verified: manual sleep and wake, auto‑sleep after a fast‑forwarded clock, "Never sleep" exemption, diffs only | **Done** |
-| 5. Packaging | electron‑builder NSIS installer (x64, then arm64), code signing, Electron fuses (cookie encryption, no `ELECTRON_RUN_AS_NODE`, asar integrity), electron‑updater with GitHub Releases provider, staged rollout and rollback to previous version on failed install | Planned |
+| 5. Packaging | electron‑builder NSIS installer (x64, per user, no admin prompt, optional install folder, Start menu/desktop shortcuts, app identity for toasts). Electron fuses including cookie encryption and asar integrity; the shell moved to an `app://` protocol so `file://` privileges can be off. electron‑updater on GitHub Releases: checks at startup and every 6 h (switchable), downloads only when asked, installs on restart or quit, SHA‑512 verified. A tag‑triggered workflow builds on Windows and uploads to a draft release. Signing is wired through environment variables but no certificate exists yet. Verified: installer built (under Wine), fuses read back from the exe, the packaged app starts with every fuse on, update detection against a local feed. Not done: arm64 (x64 runs emulated), staged rollout, and rollback (NSIS replaces the install; a failed check or download leaves it untouched). See [RELEASING.md](RELEASING.md) | **Done** |
 
 "Reduce background activity" from the brief was dropped as a separate switch: Chromium already throttles timers and stops rendering in hidden service views, and turning that off would only cost battery. Sleeping is the meaningful step beyond it. A sleeping service cannot notify you until it is opened again, which is why "Never sleep" exists and why auto‑sleep after inactivity is off by default.
 

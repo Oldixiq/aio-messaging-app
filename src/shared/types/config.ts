@@ -14,6 +14,8 @@ export interface AppSettings {
     launchBehavior: LaunchBehavior;
     /** BCP-47 tag. Only `en` ships today; the setting is wired for i18n. */
     language: string;
+    /** Looks for new versions at startup and every few hours (installed builds only). */
+    checkForUpdates: boolean;
   };
   appearance: {
     theme: ThemeSource;
